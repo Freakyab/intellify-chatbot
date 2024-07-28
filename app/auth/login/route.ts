@@ -7,22 +7,14 @@ export async function POST(req: NextRequest) {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const supabase = createRouteHandlerClient({ cookies });
+    const url = new URL(req.url);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
     });
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 });
     }
-
-    const { data: { session } } = await supabase.auth.getSession();
-    const response = NextResponse.redirect(new URL('/', req.url));
-
-    // Set the session cookie
-    response.headers.set(
-        "Set-Cookie",
-        `sb-access-token=${session?.access_token}; Path=/; Secure; SameSite=Strict`
-    );
-    return response;
+    return NextResponse.redirect(url.origin);
 }

@@ -15,26 +15,15 @@ export async function POST(req: NextRequest) {
         cookies: () => cookieStore
     })
 
-    const res =
+    const { error } =
         await supabase.auth.signUp({
             email, password,
             options: {
                 emailRedirectTo: `${url.origin}/auth/callback`
             }
         })
-    if (res.error) {
-        return NextResponse.json(res.error, {
-            status: 400
-        });
-    } else {
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = NextResponse.redirect(new URL('/', req.url));
-
-        // Set the session cookie
-        response.headers.set(
-            "Set-Cookie",
-            `sb-access-token=${session?.access_token}; Path=/; Secure; SameSite=Strict`
-        );
-        return response;
+    if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
     }
+    return NextResponse.redirect(url.origin);
 }
