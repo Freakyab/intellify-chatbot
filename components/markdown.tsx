@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import markdownit from "markdown-it";
 import dompurify from "dompurify";

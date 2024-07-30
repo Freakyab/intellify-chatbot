@@ -2,28 +2,26 @@
 import React, { useState, useEffect } from "react";
 import { useChat } from "ai/react";
 import { Bot, Loader2, Send, User2 } from "lucide-react";
-import Markdown from "../../components/markdown";
+import Markdown from "../../../components/markdown";
 import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import { Session } from "@supabase/supabase-js";
+import {  AI, Message } from "@/lib/chat/action";
+import { useActions, useAIState, useUIState } from "ai/rsc";
+import { useRouter } from "next/navigation";
+import { useEnterSubmit } from "@/lib/use-form";
 
 export default function Home() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, stop } =
-    useChat({
-      api: "../api/genai",
-    });
   const { id } = useParams();
-
-  type ChatMessage = {
-    id: string;
-    role: string;
-    content: string;
-  };
-  type ChatType = ChatMessage[];
+  const router = useRouter();
 
   const [userSession, setUserSession] = useState<Session>();
-  const [user, setUser] = useState({ id: "", email: "", auth: false });
-  const [chatData, setChatData] = useState<ChatType>([]);
+  const [user, setUser] = useState({ userId: "", email: "", auth: false });
+  const [chatData, setChatData] = useState<Message[]>([]);
+
+  const [input, setInput] = useState("");
+  const [messages] = useUIState();
+  const [aiState] = useAIState();
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -36,7 +34,7 @@ export default function Home() {
       } else if (session) {
         if (session?.user.aud === "authenticated") {
           setUser({
-            id: session?.user.id as string,
+            userId: session?.user.id as string,
             email: session?.user.email as string,
             auth: true,
           });
@@ -57,7 +55,7 @@ export default function Home() {
         .from("chats")
         .select("chat")
         .eq("id", id)
-        .eq("user_id", user.id);
+        .eq("user_id", user.userId);
       if (error) {
         console.error("Error fetching or creating document:", error);
       }
@@ -67,7 +65,7 @@ export default function Home() {
         // Document does not exist, create a new one
         const { error: insertError } = await supabase
           .from("chats")
-          .insert([{ id, user_id: user.id, chat: [] }]);
+          .insert([{ id, user_id: user.userId, chat: [] }]);
 
         if (insertError) {
           throw insertError;
@@ -81,111 +79,100 @@ export default function Home() {
       console.error("Error fetching or creating document:", error);
     }
   };
-  const getDocUpdate = async () => {
-    if (messages.length > 0) {
-      try {
-        console.log("Updating document");
-
-        // Filter out messages that are already in chatData
-        const newMessages = messages.filter(
-          (msg) => !chatData.some((existingMsg) => existingMsg.id === msg.id)
-        );
-
-        // Update chatData with new messages
-        const updatedChatData = [...chatData, ...newMessages];
-        setChatData(updatedChatData);
-        console.log(updatedChatData, "updatedChatData");
-
-        // const {data: supabaseData, error: chatDataError} = await supabase
-        // .from("chats")
-        // // .update({ chat: updatedChatData })
-        // .select("chat")
-        // .eq("id", id)
-        // .eq("user_id", user.id);
-
-        // console.log(supabaseData, "Existing chat data");
-
-        const { data, error } = await supabase
-          .from("chats")
-          .update({ chat: updatedChatData })
-          .eq("id", id)
-          .eq("user_id", user.id);
-
-        console.log(data, "data");
-        if (error) {
-          throw error;
-        }
-      } catch (error) {
-        console.error("Error updating document:", error);
-      }
-    }
-  };
 
   useEffect(() => {
     console.log(user);
-    if (user.auth && user.id && id) {
+    if (user.auth && user.userId && id) {
       getDoc();
     }
   }, [userSession, user, id]);
 
   useEffect(() => {
-    if (messages.length > 0) {
-      getDocUpdate();
+    const messagesLength = aiState.messages?.length;
+    if (messagesLength === 2) {
+      router.refresh();
     }
-  }, [messages]);
+  }, [aiState.messages, router]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center p-12">
-      {RenderForm()}
-      {RenderMessages()}
-    </div>
+    <AI
+      initialAIState={{
+        chatId: id as string,
+        messages: chatData,
+        interactions: [],
+      }}>
+      <div className="flex min-h-screen flex-col items-center p-12">
+        {RenderForm()}
+        {RenderMessages()}
+      </div>
+    </AI>
   );
 
   function RenderForm() {
+    "use client";
+    const { formRef, onKeyDown } = useEnterSubmit()
+  const inputRef = React.useRef<HTMLTextAreaElement>(null)
+  const { submitUserMessage, describeImage } = useActions()
+  const [_, setMessages] = useUIState<typeof AI>()
+
+  React.useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [])
     return (
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(e, {
-            data: {
-              prompt: input,
-              history: chatData,
-            },
-          });
-        }}
+        // onSubmit={}
         className="w-full flex flex-row gap-2 items-center h-full">
-        <input
-          type="text"
-          placeholder={isLoading ? "Generating..." : "ask something..."}
+        <textarea
+             ref={inputRef}
+             tabIndex={0}
+             onKeyDown={onKeyDown}
+             autoFocus
+             spellCheck={false}
+             autoComplete="off"
+             autoCorrect="off"
+             name="message"
+             rows={1}
           value={input}
-          disabled={isLoading}
-          onChange={handleInputChange}
+          onChange={e => setInput(e.target.value)}
+             // placeholder={isLoading ? "Generating..." : "ask something..."}
+          // value={input}
+          // disabled={isLoading}
+          // onChange={handleInputChange}
           className="border-b border-dashed outline-none w-full px-4 py-2 text-right focus:placeholder-transparent placeholder:text-[#0842A099] text-[#0842a0]
           disabled:bg-transparent"
         />
         <button
           type="submit"
           className="rounded-full shadow-md border flex flex-row">
-          {isLoading ? (
+          {/* {isLoading ? (
             <Loader2
               className="p-3 h-10 w-10 stroke-stone-500 animate-spin"
               onClick={stop}
             />
           ) : (
             <Send className="p-3 h-10 w-10 stroke-stone-500" />
-          )}
+          )} */}
         </button>
       </form>
     );
   }
 
   function RenderMessages() {
+    
     return (
       <div
         id="chatbox"
         className="flex flex-col-reverse w-full text-left mt-4 gap-4 whitespace-pre-wrap">
-          
-        {chatData.map((message, index) => (
+        {messages.map((message:any) => (
+          <div key={message.id}>
+            {message.spinner}
+            {message.display}
+            {message.attachments}
+          </div>
+        ))}
+        {/* {chatData.map((message, index) => (
           <div
             key={index}
             className={`px-4 pt-3 shadow-md rounded-md h-fit ml-10 relative ${
@@ -205,7 +192,7 @@ export default function Home() {
               />
             )}
           </div>
-        ))}
+        ))} */}
       </div>
     );
   }
