@@ -3,23 +3,18 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-    try {
 
-        const url = new URL(req.url)
+    const url = new URL(req.url)
 
-        const code = url.searchParams.get("code")
+    const code = url.searchParams.get("code")
 
-        if (code) {
-            const cookieStore = cookies();
-            const supabase = createRouteHandlerClient({
-                cookies: () => cookieStore
-            })
-            await supabase.auth.exchangeCodeForSession(code)
-        }
-
-        return NextResponse.redirect(url.origin)
-    } catch (e) {
-        console.error(e)
-        return NextResponse.redirect("/")
+    if (code) {
+        const cookieStore = cookies();
+        const supabase = createRouteHandlerClient({
+            cookies: () => cookieStore
+        })
+        await supabase.auth.exchangeCodeForSession(code)
     }
+
+    return NextResponse.redirect(url.origin)
 }

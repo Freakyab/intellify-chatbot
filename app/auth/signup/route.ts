@@ -3,27 +3,36 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-    const url = new URL(req.url);
+    try {
 
-    const cookieStore = cookies()
+        const url = new URL(req.url);
 
-    const formData = await req.formData();
+        const cookieStore = cookies();
 
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const supabase = createRouteHandlerClient({
-        cookies: () => cookieStore
-    })
+        const { email, password } = await req.json();
 
-    const { error } =
-        await supabase.auth.signUp({
-            email, password,
-            options: {
-                emailRedirectTo: `${url.origin}/auth/callback`
-            }
-        })
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        const supabase = createRouteHandlerClient({
+            cookies: () => cookieStore
+        });
+
+        const { error } =
+            await supabase.auth.signUp({
+                email, password,
+                options: {
+                    emailRedirectTo: `${url.origin}/auth/callback`
+                }
+            });
+
+        console.log("Error", error, "Email", email, "Password", password);
+
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+        return NextResponse.redirect(url.origin, {
+            status: 302
+        });
+    } catch (e) {
+        console.error(e);
+        return NextResponse.json({ error: e }, { status: 500 });
     }
-    return NextResponse.redirect(url.origin);
 }
