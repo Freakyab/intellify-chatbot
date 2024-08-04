@@ -10,10 +10,19 @@ import { toast, ToastContainer, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function Home() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, stop } = useChat({
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    stop,
+    data,
+  } = useChat({
     api: "../api/genai",
   });
   const { id } = useParams();
+  console.log(messages, "messages");
 
   type ChatMessage = {
     id: string;
@@ -28,12 +37,8 @@ export default function Home() {
 
   useEffect(() => {
     const fetchDetails = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
-        console.error("Error fetching session:", error);
         toast.error("Error fetching session");
       } else if (session) {
         if (session?.user.aud === "authenticated") {
@@ -43,10 +48,11 @@ export default function Home() {
             auth: true,
           });
         }
-        console.log("Session fetched successfully", session);
         setUserSession(session);
       } else {
-        toast.info("Your chat will not be saved, please login to save your chat");
+        toast.info(
+          "Your chat will not be saved, please login to save your chat"
+        );
       }
     };
 
@@ -55,8 +61,6 @@ export default function Home() {
 
   const getDoc = useCallback(async () => {
     try {
-      console.log("Fetching document");
-
       const { data, error } = await supabase
         .from("chats")
         .select("chat")
@@ -77,9 +81,7 @@ export default function Home() {
         if (insertError) {
           throw insertError;
         }
-        console.log("Document created successfully");
       } else {
-        console.log("Document fetched successfully");
         setChatData(data?.[0]?.chat || []);
       }
     } catch (error) {
@@ -90,16 +92,12 @@ export default function Home() {
   const getDocUpdate = useCallback(async () => {
     if (messages.length > 0) {
       try {
-        console.log("Updating document");
-
-        // Filter out messages that are already in chatData
         const newMessages = messages.filter(
           (msg) => !chatData.some((existingMsg) => existingMsg.id === msg.id)
         );
 
         if (newMessages.length === 0) return;
 
-        // Update chatData with new messages
         const updatedChatData = [...chatData, ...newMessages];
         setChatData(updatedChatData);
 
@@ -109,7 +107,6 @@ export default function Home() {
           .eq("id", id)
           .eq("user_id", user.id);
 
-        console.log(data, "data");
         if (error) {
           throw error;
         }
@@ -148,8 +145,7 @@ export default function Home() {
             },
           });
         }}
-        className="w-full flex flex-row gap-2 items-center h-full"
-      >
+        className="w-full flex flex-row gap-2 items-center h-full">
         <input
           type="text"
           placeholder={isLoading ? "Generating..." : "ask something..."}
@@ -159,9 +155,14 @@ export default function Home() {
           className="border rounded-md border-[#E76F51] outline-none w-full px-4 py-2 text-right focus:placeholder-transparent placeholder:text-[#0842A099] text-[#0842a0]
           disabled:bg-transparent"
         />
-        <button type="submit" className="rounded-full shadow-md border flex flex-row">
+        <button
+          type="submit"
+          className="rounded-full shadow-md border flex flex-row">
           {isLoading ? (
-            <Loader2 className="p-3 h-10 w-10 stroke-stone-500 animate-spin" onClick={stop} />
+            <Loader2
+              className="p-3 h-10 w-10 stroke-stone-500 animate-spin"
+              onClick={stop}
+            />
           ) : (
             <Send className="p-3 h-10 w-10 stroke-stone-500" />
           )}
@@ -172,22 +173,25 @@ export default function Home() {
 
   function RenderMessages() {
     return (
-      <div id="chatbox" className="flex flex-col-reverse w-full text-left mt-4 gap-4 whitespace-pre-wrap">
+      <div
+        id="chatbox"
+        className="flex flex-col-reverse w-full text-left mt-4 gap-4 whitespace-pre-wrap">
+        {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
         {chatData.map((message, index) => (
           <div
             key={index}
             className={`px-4 pt-3 shadow-md rounded-md h-fit ml-10 relative ${
               message.role === "user" ? "bg-stone-300" : ""
-            }`}
-          >
+            }`}>
             <Markdown text={message.content} />
             {message.role === "user" ? (
-              //  make first letter capital
               <User2 className="absolute top-2 -left-10 border rounded-full p-1 shadow-lg" />
             ) : (
               <Bot
                 className={`absolute top-2 -left-10 border rounded-full p-1 shadow-lg stroke-[#0842a0] ${
-                  isLoading && index === messages.length - 1 ? "animate-bounce" : ""
+                  isLoading && index === messages.length - 1
+                    ? "animate-bounce"
+                    : ""
                 }`}
               />
             )}
