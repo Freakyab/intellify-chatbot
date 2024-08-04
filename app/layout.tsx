@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { AI } from "@/lib/chat/action";
 import "./globals.css";
 import Navbar from "../components/navbar";
 
@@ -18,12 +17,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <AI>
+      {/* <AI> */}
+        <body className={inter.className}>
           <Navbar />
           {children}
-        </AI>
-      </body>
+        </body>
+      {/* </AI> */}
     </html>
   );
 }

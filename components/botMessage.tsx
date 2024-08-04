@@ -1,43 +1,28 @@
-"use client";
-import { readStreamableValue, StreamableValue } from "ai/rsc";
-import React,{useEffect,useState} from "react";
+// "use client";
+import { Bot, User2 } from "lucide-react";
+import Markdown from "./markdown";
 
-function BotMessage({
+export const BotMessage = ({
+  role,
   content,
-  className,
 }: {
-  content: string | StreamableValue<string>;
-  className?: string;
-}) {
-    const text = useStreamableText(content)
-
-  return <div>{text}</div>;
-}
-
-export default BotMessage;
-
-
-export const useStreamableText = (
-    content: string | StreamableValue<string>
-  ) => {
-    const [rawContent, setRawContent] = useState(
-      typeof content === 'string' ? content : ''
-    )
-  
-    useEffect(() => {
-      ;(async () => {
-        if (typeof content === 'object') {
-          let value = ''
-          for await (const delta of readStreamableValue(content)) {
-            console.log(delta)
-            if (typeof delta === 'string') {
-              setRawContent((value = value + delta))
-            }
-          }
-        }
-      })()
-    }, [content])
-  
-    return rawContent
-  }
-  
+  role: string;
+  content: string;
+}) => {
+  return (
+    <div
+      className={`px-4 pt-3 shadow-md rounded-md h-fit ml-10 relative ${
+        role === "user" ? "bg-stone-300" : ""
+      }`}>
+      <Markdown text={content} />
+      {role === "user" ? (
+        //  make first letter capital
+        <User2 className="absolute top-2 -left-10 border rounded-full p-1 shadow-lg" />
+      ) : (
+        <Bot
+          className={`absolute top-2 -left-10 border rounded-full p-1 shadow-lg stroke-[#0842a0]`}
+        />
+      )}
+    </div>
+  );
+};
