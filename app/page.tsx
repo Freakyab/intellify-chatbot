@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 export default function Home() {
   const router = useRouter();
   const generateId = async () => {
@@ -9,7 +10,12 @@ export default function Home() {
   useEffect(() => {
     const fetchId = async () => {
       const id = await generateId();
-      router.push(`/${id}`);
+      let userId;
+      const { data } = await supabase.auth.getSession();
+      if (data) {
+        userId = data?.session?.user.id;
+      }
+      router.push(`/${id}?user=${userId}`);
     };
     fetchId();
   }, []);

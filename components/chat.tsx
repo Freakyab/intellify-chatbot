@@ -10,33 +10,33 @@ import { supabase } from "@/lib/supabase";
 export default function Page() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useUIState<typeof AI>();
-  const { submitMessage, setId } = useActions();
+  const { submitMessage } = useActions();
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState("");
   const { id } = useParams();
   if (!id) return;
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Error fetching session:", error);
-      } else if (session) {
-        if (session?.user.aud === "authenticated") {
-          console.log(session.user.id);
-          setUserId(session?.user.id as string);
-          setId(id, session?.user.id);  // Set ID here after fetching session
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const fetchDetails = async () => {
+  //     const {
+  //       data: { session },
+  //       error,
+  //     } = await supabase.auth.getSession();
+  //     if (error) {
+  //       console.error("Error fetching session:", error);
+  //     } else if (session) {
+  //       if (session?.user.aud === "authenticated") {
+  //         console.log(session.user.id);
+  //         setUserId(session?.user.id as string);
+  //         setId(id, session?.user.id);  // Set ID here after fetching session
+  //       }
+  //     }
+  //   };
 
-    fetchDetails();
-  }, [id, userId]);
+  //   fetchDetails();
+  // }, [id, userId]);
 
-  console.log(messages);
+  // console.log(messages);
 
   return (
     <main className="flex min-h-screen flex-col items-center p-12">
