@@ -8,6 +8,7 @@ function Page() {
       initialAIState={{
         chatId: "",
         messages: [],
+        userId: "",
       }}>
       <Chat />
     </AI>

@@ -1,22 +1,33 @@
-
-'use server';
+// "use server";
 import { BotMessage } from "@/components/botMessage";
-import { getSession } from "@/lib/getSession";
-// import onGetUiState from "@/lib/chat/onGetUiState";
+// import { supabase } from "@/lib/supabase";
+// import { saveData } from "@/lib/utils";
 import { google } from "@ai-sdk/google";
 import { streamText } from "ai";
-
-import { createAI, createStreamableUI, getMutableAIState } from "ai/rsc";
-
+import { createAI, createStreamableUI,  getMutableAIState } from "ai/rsc";
 import { Loader2 } from "lucide-react";
+
+async function setId(id: string, userId: string) {
+  "use server";
+  console.log(id, userId, ": id");
+  const aiState = getMutableAIState();
+  aiState.update({
+    ...aiState.get(),
+    chatId: id,
+    userId: userId,
+  });
+  return;
+}
 
 async function submitMessage(input: string) {
   "use server";
-
   const aiState = getMutableAIState();
-  const spinnerStream = createStreamableUI(<Loader2  className="animate-spin"/>);
+  const spinnerStream = createStreamableUI(
+    <Loader2 className="animate-spin" />
+  );
   const messageStream = createStreamableUI(null);
-  const userTest = createStreamableUI(
+  const tokenStream = createStreamableUI();
+  const userText = createStreamableUI(
     <BotMessage role="user" content={input} />
   );
   aiState.update({
@@ -37,9 +48,12 @@ async function submitMessage(input: string) {
 
   const result = await streamText({
     model: google("models/gemini-pro"),
-    maxTokens: 10,
+    maxTokens: 100,
     temperature: 0.7,
     messages: [...history],
+    onFinish({ usage }) {
+      tokenStream.update(usage.totalTokens);
+    },
   });
 
   let textContent = "";
@@ -48,7 +62,11 @@ async function submitMessage(input: string) {
     textContent += chunk;
 
     messageStream.update(
-     <BotMessage role="assistant" content={textContent} />
+      <BotMessage
+        role="assistant"
+        content={textContent}
+        token={tokenStream.value}
+      />
     );
     aiState.update({
       ...aiState.get(),
@@ -65,12 +83,13 @@ async function submitMessage(input: string) {
 
   spinnerStream.done(null);
   messageStream.done();
-  userTest.done();
+  userText.done();
+  tokenStream.done();
   return {
     id: aiState.get().chatId,
     spinner: spinnerStream.value,
     display: messageStream.value,
-    userText: userTest.value,
+    userText: userText.value,
   };
 }
 
@@ -86,8 +105,9 @@ export type Message = {
 };
 
 export type AIState = {
-  chatId: string[] | string ;
+  chatId: string[] | string;
   messages: Message[] | null;
+  userId: string;
 };
 
 export type UIState = {
@@ -98,24 +118,45 @@ export type UIState = {
 }[];
 export interface Chat extends Record<string, any> {
   id: string;
-  title: string;
-  createdAt: Date;
-  userId: string;
-  path: string;
-  messages: Message[];
-  sharePath?: string;
+  created_at: Date;
+  chat: JSON[];
+  user_id: string;
 }
 
 export const AI = createAI<AIState, UIState>({
   initialUIState: [],
   initialAIState: {
-    chatId: new Date().toISOString(),
+    chatId: "",
     messages: [],
+    userId: "",
   },
-  // onSetAIState: async({state})=>{
-  //   const session = getSession();
-  // },
+
+  onSetAIState: async ({ state }) => {
+    "use server";
+    try {
+      const { chatId, userId, messages } = state;
+      // const { data, error } = await supabase
+      //   .from("chats")
+      //   .select("chat")
+      //   .eq("id", chatId)
+      //   .eq("user_id", userId);
+      // console.log(error, "first error");
+      // if (!data || data.length == 0) {
+      //   const { data: docs, error } = await supabase
+      //     .from("chats")
+      //     .insert([{ id: chatId, user_id: userId, chat: messages }]);
+      //   if(docs) console.log(docs , "document");
+      //   else if (error) {
+      //     console.log(error, "error");
+      //   }
+      // }
+      // await saveData(chatId, userId, messages);
+    } catch (error) {
+      console.log("Error in onSetAIState:", error);
+    }
+  },
   actions: {
     submitMessage,
+    setId,
   },
 });
