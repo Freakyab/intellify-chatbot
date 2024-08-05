@@ -4,12 +4,11 @@ import { BotMessage } from "@/components/botMessage";
 // import { saveData } from "@/lib/utils";
 import { google } from "@ai-sdk/google";
 import { streamText } from "ai";
-import { createAI, createStreamableUI,  getMutableAIState } from "ai/rsc";
+import { createAI, createStreamableUI, getMutableAIState } from "ai/rsc";
 import { Loader2 } from "lucide-react";
 
 async function setId(id: string, userId: string) {
   "use server";
-  console.log(id, userId, ": id");
   const aiState = getMutableAIState();
   aiState.update({
     ...aiState.get(),
@@ -130,7 +129,10 @@ export const AI = createAI<AIState, UIState>({
     messages: [],
     userId: "",
   },
-
+  actions: {
+    submitMessage,
+    setId,
+  },
   onSetAIState: async ({ state }) => {
     "use server";
     try {
@@ -154,9 +156,5 @@ export const AI = createAI<AIState, UIState>({
     } catch (error) {
       console.log("Error in onSetAIState:", error);
     }
-  },
-  actions: {
-    submitMessage,
-    setId,
   },
 });
