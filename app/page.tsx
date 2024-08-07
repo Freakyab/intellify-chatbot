@@ -4,9 +4,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 export default function Home() {
   const router = useRouter();
-  const generateId = async () => {
-    return BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-  };
   useEffect(() => {
     const fetchId = async () => {
       const id = await generateId();
@@ -20,3 +17,7 @@ export default function Home() {
     fetchId();
   }, []);
 }
+
+export const generateId = async () => {
+  return BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
+};

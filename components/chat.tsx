@@ -1,42 +1,18 @@
 "use client";
 
 import { useActions, useUIState } from "ai/rsc";
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { AI } from "@/app/(chat)/[id]/action";
 import { Loader2, Send } from "lucide-react";
 import { useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 export default function Page() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitMessage } = useActions();
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState("");
   const { id } = useParams();
   if (!id) return;
-
-  // useEffect(() => {
-  //   const fetchDetails = async () => {
-  //     const {
-  //       data: { session },
-  //       error,
-  //     } = await supabase.auth.getSession();
-  //     if (error) {
-  //       console.error("Error fetching session:", error);
-  //     } else if (session) {
-  //       if (session?.user.aud === "authenticated") {
-  //         console.log(session.user.id);
-  //         setUserId(session?.user.id as string);
-  //         setId(id, session?.user.id);  // Set ID here after fetching session
-  //       }
-  //     }
-  //   };
-
-  //   fetchDetails();
-  // }, [id, userId]);
-
-  // console.log(messages);
 
   return (
     <main className="flex min-h-screen flex-col items-center p-12">
@@ -47,12 +23,9 @@ export default function Page() {
           setLoading(true);
           try {
             const responseMessage = await submitMessage(input);
-            setMessages((currentMessages) => [
-              responseMessage,
-              ...currentMessages,
-            ]);
+              setMessages([...messages,responseMessage]);
           } catch (e) {
-            console.log(e);
+            console.error(e);
           }
           setLoading(false);
           setInput("");
@@ -76,16 +49,17 @@ export default function Page() {
           )}
         </button>
       </form>
-
-      {messages.map((message) => (
-        <div
-          key={message.id}
-          id="chatbox"
-          className="flex flex-col-reverse w-full text-left mt-4 gap-4 whitespace-pre-wrap">
-          {message.userText}
-          {message.display}
-        </div>
-      ))}
+      <div className="w-full h-full flex flex-col-reverse">
+        {messages.map((message,index) => (
+          <div
+            key={index}
+            id="chatbox"
+            className="flex flex-col w-full text-left mt-4 gap-4 whitespace-pre-wrap">
+            {message.display}
+            {message.userText}
+          </div>
+        ))}
+      </div>
     </main>
   );
 }

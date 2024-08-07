@@ -17,12 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* <AI> */}
         <body className={inter.className}>
           <Navbar />
           {children}
         </body>
-      {/* </AI> */}
     </html>
   );
 }
