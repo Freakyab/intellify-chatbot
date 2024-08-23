@@ -9,10 +9,8 @@ export const BotMessage = ({
 }: {
   role: string;
   content: string;
-  token?: Number| undefined;
+  token?: Number | undefined;
 }) => {
-
-
   return (
     <div
       className={`px-4 pt-3 shadow-md rounded-md h-fit ml-10 relative ${
@@ -21,14 +19,20 @@ export const BotMessage = ({
       <Markdown text={content} />
       {role === "user" ? (
         //  make first letter capital
-        <User2 className="absolute top-2 -left-10 border rounded-full p-1 shadow-lg" />
+        <User2
+          size={30}
+          className="absolute top-2 border-2  -left-10  rounded-full p-1 shadow-lg"
+        />
       ) : (
         <Bot
-          className={`absolute top-2 -left-10 border rounded-full p-1 shadow-lg stroke-[#0842a0]`}
+          size={30}
+          className={`absolute top-2 -left-10 border-2  rounded-full p-1 shadow-lg stroke-[#0842a0]`}
         />
       )}
       {role !== "user" && (
-        <div id="" className="absolute top-2 right-0 text-[#E76F51] rounded-md border text-xs font-semibold p-1 px-3 shadow-md m-2 border-[#E76F51]">
+        <div
+          id=""
+          className="absolute top-2 right-0 text-[#E76F51] rounded-md border text-xs font-semibold p-1 px-3 shadow-md m-2 border-[#E76F51]">
           Token: {String(token)}
         </div>
       )}

@@ -8,7 +8,7 @@ import {
   getMutableAIState,
 } from "ai/rsc";
 import { Prisma } from "@prisma/client";
-import { setData } from "@/app/action/chat";
+import { setChatName, setData } from "@/app/action/chat";
 
 async function submitMessage(input: string) {
   "use server";
@@ -18,7 +18,19 @@ async function submitMessage(input: string) {
   const userText = createStreamableUI(
     <BotMessage role="user" content={input} />
   );
-
+  /*
+    {
+     chatId: "1",  userId: "1", 
+     messages: [
+       { role: "user", content: "Hello" }, 
+        { 
+        id: generateId(),
+        role: "user",
+        content: input,
+      },}
+     ]
+  }
+  */
   aiState.update({
     ...aiState.get(),
     messages: [
@@ -36,27 +48,23 @@ async function submitMessage(input: string) {
     content: message.content,
   }));
 
-
   const result = await streamText({
     model: google("models/gemini-pro"),
     maxTokens: 10,
     temperature: 0.7,
     messages: [...history],
     onFinish({ usage }) {
-      tokenStream = usage.completionTokens;
+      tokenStream = usage.totalTokens;
     },
   });
+  
 
   let textContent = "";
   for await (const chunk of result.textStream) {
     textContent += chunk;
   }
   messageStream.update(
-    <BotMessage
-      role="assistant"
-      content={textContent}
-      token={tokenStream}
-    />
+    <BotMessage role="assistant" content={textContent} token={tokenStream} />
   );
   aiState.update({
     ...aiState.get(),
@@ -66,7 +74,7 @@ async function submitMessage(input: string) {
         id: generateId(),
         role: "assistant",
         content: textContent,
-        token : tokenStream
+        token: tokenStream,
       },
     ],
   });
@@ -137,16 +145,21 @@ export const AI = createAI<AIState, UIState>({
     "use server";
     try {
       const { chatId, userId, messages } = state;
-      if (!chatId || !userId) {
+      if (
+        chatId === "null" ||
+        chatId === "undefined" ||
+        userId === "null" ||
+        userId == "undefined"
+      ) {
         console.error("chatId or userId is missing or invalid");
         return;
+      } else {
+        await setData({
+          chatId,
+          messages: messages.filter((message) => message !== null),
+          userId,
+        });
       }
-
-      await setData({
-        chatId,
-        messages: messages.filter((message) => message !== null),
-        userId,
-      });
     } catch (error) {
       console.error("Error in onSetAIState:", error);
     }

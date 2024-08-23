@@ -2,15 +2,19 @@ import React from "react";
 import { AI } from "./action";
 import Chat from "@/components/chat";
 import { getData } from "@/app/action/chat";
+import { getCurrentUser } from "@/lib/getSession";
 export interface ChatPageProps {
   params: { id: string };
-  searchParams: { user: string | undefined | null };
 }
-async function Page({ params, searchParams }: ChatPageProps) {
+async function Page({ params  }: ChatPageProps) {
   try {
+    const chatId = params.id;
+    const session = await getCurrentUser();
+    const userId = session?.user.id;
+
     const { messages, error } = await getData({
-      chatId: params.id,
-      userId: searchParams.user,
+      chatId,
+      userId,
     });
 
     const serverMessages = messages? messages : []
@@ -23,11 +27,12 @@ async function Page({ params, searchParams }: ChatPageProps) {
     return (
       <AI
         initialAIState={{
-          chatId: params.id as string,
+          chatId: chatId as string,
           messages: serverMessages,
-          userId: searchParams.user || "",
+          userId: userId || "",
         }}>
-        <Chat />
+        <Chat chatId={chatId} userId={userId}/>
+        
       </AI>
     );
   } catch (err) {

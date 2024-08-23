@@ -18,6 +18,17 @@ model Chats {
   chatId   String
   userId   String
   messages Json[]
+  chatName String
+  createdAt DateTime @default(now())
 
   @@unique([chatId, userId])
+}
+
+model Accounts {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  email   String
+  picture String?
+  password String
+  createdAt DateTime @default(now())
 }
