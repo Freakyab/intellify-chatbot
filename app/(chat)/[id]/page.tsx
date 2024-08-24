@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/getSession";
 export interface ChatPageProps {
   params: { id: string };
 }
-async function Page({ params  }: ChatPageProps) {
+async function Page({ params }: ChatPageProps) {
   try {
     const chatId = params.id;
     const session = await getCurrentUser();
@@ -17,11 +17,11 @@ async function Page({ params  }: ChatPageProps) {
       userId,
     });
 
-    const serverMessages = messages? messages : []
+    const serverMessages = messages ? messages : [];
 
     if (error) {
       console.error("Error fetching chat data:", error);
-      return <div>Error fetching chat data.</div>;
+      return <div className="text-red-500">Error loading page.</div>;
     }
 
     return (
@@ -31,8 +31,7 @@ async function Page({ params  }: ChatPageProps) {
           messages: serverMessages,
           userId: userId || "",
         }}>
-        <Chat chatId={chatId} userId={userId}/>
-        
+        <Chat chatId={chatId} userId={userId} />
       </AI>
     );
   } catch (err) {

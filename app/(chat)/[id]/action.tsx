@@ -8,7 +8,7 @@ import {
   getMutableAIState,
 } from "ai/rsc";
 import { Prisma } from "@prisma/client";
-import { setChatName, setData } from "@/app/action/chat";
+import { setData } from "@/app/action/chat";
 
 async function submitMessage(input: string) {
   "use server";

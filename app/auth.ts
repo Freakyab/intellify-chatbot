@@ -4,7 +4,7 @@ import {
 } from "next-auth";
 
 import { userService } from "./services/userServices";
-import { getUser, createUser, checkAccount, setPicture } from "./action/chat";
+import { getUser, createUser, checkAccount, setPicture } from "./action/auth";
 import Credentials from "next-auth/providers/credentials";
 import { encode, decode } from "next-auth/jwt";
 import GoogleProvider from 'next-auth/providers/google'
@@ -30,7 +30,6 @@ export const authOptions: NextAuthOptions = {
             async authorize(credentials) {
                 try {
                     if (credentials) {
-                        console.log(credentials.email, credentials.password, credentials.name, "credentials");
                         const user = await userService.authenticate(
                             credentials.email,
                             credentials.password,

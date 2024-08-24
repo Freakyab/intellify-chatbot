@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
     try {
         const resBody = await req.json();
-        console.log(resBody, "resBody")
         const genai = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 
         const model = genai.getGenerativeModel({ model: 'gemini-pro' });
@@ -13,7 +12,6 @@ export async function POST(req: NextRequest) {
 
         const res = await streamingResponse.response;
         const reply = res.text();
-        console.log(reply, "reply")
         return NextResponse.json({ reply }, { status: 200 });
     } catch (err) {
         console.error(err);

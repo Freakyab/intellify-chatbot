@@ -27,24 +27,18 @@ export async function getChatData(userId: string) {
     try {
         if (userId.length === 0) return { messages: [], error: "Invalid Id" };
 
-        // Fetch chats and sort them by 'createdAt' in descending order
         const documents = await db.chats.findMany({
             where: {
                 userId
             },
             orderBy: {
-                createdAt: 'desc' // Ensure you have a 'createdAt' field or adjust according to your schema
+                updatedAt: 'desc' // Ensure you have a 'createdAt' field or adjust according to your schema
             }
         });
 
-        if (documents.length > 0) {
-            return { chats: documents };
-        } else {
-            return { error: "No documents found" };
-        }
+        return { chats: documents, error: "", isEmpty: false };
     } catch (err) {
-        console.error(err);
-        return { error: "An error occurred" };
+        return { chats: [], error: err, isEmpty: true };
     }
 }
 
@@ -80,6 +74,7 @@ export async function getData({ chatId, userId }: { chatId: string, userId: stri
             })
             return { messages: newDoc.messages, error: "" }
         }
+
     } catch (err) {
         console.error(err);
         return { messages: [], error: err }
@@ -88,7 +83,6 @@ export async function getData({ chatId, userId }: { chatId: string, userId: stri
 
 export async function setData({ chatId, userId, messages }: { chatId: string, userId: string, messages: Prisma.InputJsonValue[] }) {
     try {
-
         if (!/^\d+$/.test(chatId) || chatId.length < 16) {
             return { error: "Invalid chat ID format" };
         }
@@ -99,13 +93,36 @@ export async function setData({ chatId, userId, messages }: { chatId: string, us
                 }
             },
             data: {
-                messages
+                messages,
+                updatedAt: new Date()
             }
         })
         return updateDoc;
     } catch (err) {
         console.error(err);
         return null;
+    }
+}
+
+export async function deleteChat({ chatId, userId }: { chatId: string, userId: string }) {
+    try {
+        if (!userId) return { error: "Invalid user id" };
+        const deleteDoc = await db.chats.delete({
+            where: {
+                chatId_userId: {
+                    chatId, userId
+                }
+            }
+        })
+        const isColloectionEmpty = await db.chats.findFirst({
+            where: {
+                userId
+            }
+        })
+        return { chat: deleteDoc, isEmpty: isColloectionEmpty ? false : true };
+    } catch (err) {
+        console.error(err);
+        return { error: err };
     }
 }
 
@@ -126,64 +143,3 @@ export async function getUnnameChats({ id }: { id: string }) {
     }
 }
 
-export async function getUser(email: string, password: string) {
-    try {
-        const user = await db.accounts.findFirst({
-            where: {
-                email,
-                password
-            }
-        })
-        return user;
-    } catch (err) {
-        console.error(err);
-        return null;
-    }
-}
-
-export async function createUser(name: string, password: string, email: string) {
-    try {
-        const user = await db.accounts.create({
-            data: {
-                name,
-                password,
-                email
-            }
-        })
-        return user;
-    } catch (err) {
-        console.error(err);
-        return null;
-    }
-}
-
-export async function checkAccount(email: string) {
-    try {
-        const user = await db.accounts.findFirst({
-            where: {
-                email
-            }
-        })
-        if (user) return true;
-        return false;
-    } catch (err) {
-        return false;
-    }
-}
-
-export async function setPicture(id: string, picture: string) {
-    try {
-        const user = await db.accounts.update({
-            where: {
-                id
-            },
-            data: {
-                picture
-            }
-        })
-        return user;
-    } catch (err) {
-        console.error(err);
-        return null;
-    }
-}

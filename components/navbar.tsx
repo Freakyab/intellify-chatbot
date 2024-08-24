@@ -68,7 +68,8 @@ function Navbar() {
                   {user.name}
                 </p>
                 <div className="hidden md:block h-6 border-r border-gray-300"></div>
-                <p className="hover:text-[#264653] cursor-pointer transition-colors duration-300">
+                <p className="hover:text-[#264653] cursor-pointer transition-colors duration-300"
+                  onClick={() => router.push("/")}>
                   Create new
                 </p>
                 <div className="hidden md:block h-6 border-r border-gray-300"></div>

@@ -1,4 +1,4 @@
-import { getUser, createUser, checkAccount } from "../action/chat";
+import { getUser, createUser, checkAccount } from "../action/auth";
 
 export const userService = {
   authenticate,

@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from "react";
 
 import { toast } from "react-toastify";
-import { Bounce, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import ToastLayout from "@/components/toastLayout";
 
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -35,11 +34,10 @@ function Page() {
     }).then((response) => {
       const error = response?.error;
       if (error) {
-        // console.log(error);
         toast.error(error);
       } else {
-        toast.success("Logged in successfully");
         router.push("/");
+        toast.success("Logged in successfully");
       }
     });
   };
@@ -167,19 +165,7 @@ function Page() {
           </div>
         </div>
       </form>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        transition={Bounce}
-      />
+      <ToastLayout />
     </div>
   );
 }

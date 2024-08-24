@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/getSession";
 import { getUnnameChats } from "./action/chat";
 import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export default function Home() {
   const [isLoading, setLoading] = useState(true);
@@ -19,14 +20,12 @@ export default function Home() {
     try {
       const id = await generateId();
       const session = await getCurrentUser();
-
-      if (session && session.user && session.user.id) {
+      if (session?.user?.id) {
         const userId = session.user.id as string;
         const doc = await getUnnameChats({ id: userId });
-        console.log(doc, "doc");
-        if (doc && doc.chatId) {
+        if (doc?.chatId) {
           router.push(`/${doc.chatId}`);
-        } else if (doc === null) {
+        } else {
           router.push(`/${id}`);
         }
       } else {
@@ -34,7 +33,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      // Optionally handle the error or redirect to a fallback page
+      toast.error("Error fetching data");
     } finally {
       setLoading(false);
     }
@@ -42,6 +41,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchId();
+    // The empty dependency array ensures this runs only once
   }, [fetchId]);
 
   return (
