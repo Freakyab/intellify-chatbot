@@ -218,7 +218,7 @@ function Sidenav({
   return (
     <aside
       style={{ zIndex: 5 }}
-      className={`fixed border-2 top-[4.0rem] md:top-[5rem] py-4 w-full md:w-1/4 left-0 transform transition-transform duration-300
+      className={`fixed border-2 pt-10 md:pt-0 md:top-[5rem] py-4 w-full md:w-1/4 left-0 transform transition-transform duration-300
         ${
           isOpen
             ? "translate-x-0 shadow-xl bg-white bg-opacity-90 backdrop-blur-md"
@@ -265,7 +265,7 @@ function Sidenav({
                           <p className="uppercase text-gray-400 text-xs mb-2">
                             {section}
                           </p>
-                          {chats.map((chat, index) => (
+                          {chats.map((chat) => (
                             <div
                               key={chat.chatId}
                               className={`flex items-center relative justify-between w-full bg-white p-4 rounded-lg shadow mb-2 transition-all hover:shadow-lg ${
