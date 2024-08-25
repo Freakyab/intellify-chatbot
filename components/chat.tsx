@@ -2,8 +2,8 @@
 import { useActions, useUIState } from "ai/rsc";
 import { useEffect, useState } from "react";
 import { AI } from "@/app/(chat)/[id]/action";
-import { Loader2, Send } from "lucide-react";
-import { Bounce, toast, ToastContainer } from "react-toastify";
+import { Loader2, Send, SidebarClose, SidebarIcon } from "lucide-react";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { setChatName } from "@/app/action/chat";
 import Sidenav from "./sidenav";
@@ -16,26 +16,32 @@ export default function Chat({
   userId?: string;
 }) {
   const [input, setInput] = useState("");
-  const [update, setUpdate] = useState(false); 
+  const [update, setUpdate] = useState(false); // Initialize update to false
   const [messages, setMessages] = useUIState<typeof AI>();
-  const [isFirstEntry, setIsFirstEntry] = useState(true); // Initialize to true
+  const [isFirstEntry, setIsFirstEntry] = useState(false);
   const { submitMessage } = useActions();
   const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     if (!userId) {
       toast.info("Your chat will not be saved, please login to save your chat");
     }
-  }, [userId]);
+  }, [userId, chatId]);
 
   useEffect(() => {
     if (isFirstEntry) {
-      setUpdate(true); // Trigger an update to Sidenav on first entry
+      setUpdate(true); // Trigger an update to Sidenav
+      setIsFirstEntry(false); // Mark the first entry as completed
     }
-  }, [chatId]);
+  }, [chatId, isFirstEntry]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!input) {
+      return;
+    }
+
     setLoading(true);
     try {
       if (messages.length % 5 === 0 && userId) {
@@ -55,12 +61,10 @@ export default function Chat({
       }
       const responseMessage = await submitMessage(input);
       setMessages([...messages, responseMessage]);
-      
+
       if (isFirstEntry) {
-        setIsFirstEntry(false); // Mark the first entry as handled
-        setUpdate(false); // Stop updating Sidenav
+        setIsFirstEntry(false); // Ensure the first entry is marked as handled
       }
-      
     } catch (e) {
       console.error(e);
     }
@@ -69,32 +73,41 @@ export default function Chat({
   };
 
   return (
-    <main className="flex w-full " style={{ height: "calc(100vh - 4rem)" }}>
+    <main className="flex w-full ">
       {userId && (
-        <div className="w-1/4 h-full">
-          <Sidenav updating={update} /> {/* Pass the update state to Sidenav */}
-        </div>
+        <Sidenav updating={update} isOpen={isOpen} setIsOpen={setIsOpen} />
       )}
-      <div className="flex flex-col w-full items-center p-12">
+      <div className="flex flex-col w-full md:p-12 py-12 px-2">
         <form
-          className="w-full flex flex-row gap-2 items-center"
+          className="w-full flex flex-row gap-2 items-center "
           onSubmit={handleSubmit}>
+          <button
+            onClick={() => setIsOpen(true)}
+            className="rounded-full shadow-md border-[#E76F51] border  md:hidden">
+            {!isOpen && <SidebarIcon className="p-3 h-10 w-10" />}
+          </button>
           <input
             value={input}
             disabled={loading}
             onChange={(event) => {
               setInput(event.target.value);
+              if (isFirstEntry) {
+                setIsFirstEntry(false); // Mark the first entry as completed
+              } else {
+                setIsFirstEntry(true); // Mark the first entry as completed
+              }
             }}
             placeholder="Type your message here...."
-            className="border rounded-full border-[#E76F51] outline-none w-full px-4 py-2 focus:placeholder-transparent placeholder:text-[#0842A099] text-[#0842a0] disabled:bg-transparent"
+            className="border rounded-full border-[#E76F51] outline-none w-full px-4 py-2  focus:placeholder-transparent placeholder:text-[#0842A099] text-[#0842a0]
+          disabled:bg-transparent"
           />
           <button
             type="submit"
-            className="rounded-full shadow-md flex flex-row border-[#E76F51] border">
+            className="rounded-full shadow-md flex flex-row border-[#E76F51] border ">
             {loading ? (
               <Loader2 className="p-3 h-10 w-10 stroke-stone-500 animate-spin" />
             ) : (
-              <Send className="p-3 h-10 w-10 stroke-stone-500" />
+              <Send className="p-3 h-10 w-10 stroke-stone-500 " />
             )}
           </button>
         </form>

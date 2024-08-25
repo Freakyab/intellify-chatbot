@@ -45,8 +45,9 @@ function Navbar() {
 
   return (
     <nav
-      className="sticky top-0 z-10 bg-white bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 border
+      className="fixed w-screen top-0 z-40 bg-white bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 border
      border-gray-100 shadow-lg">
+      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">

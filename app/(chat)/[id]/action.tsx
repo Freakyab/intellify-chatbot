@@ -48,6 +48,8 @@ async function submitMessage(input: string) {
     content: message.content,
   }));
 
+  console.log(history)
+
   const result = await streamText({
     model: google("models/gemini-pro"),
     maxTokens: 10,

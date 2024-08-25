@@ -21,9 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <script src="https://unpkg.com/flowbite@1.5.3/dist/flowbite.js"></script>
         <NextAuthProvider>
           <Navbar />
-          {children}
+          <div  className="relative top-10">{children}</div>
           <ToastLayout />
         </NextAuthProvider>
       </body>

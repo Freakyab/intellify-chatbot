@@ -143,3 +143,25 @@ export async function getUnnameChats({ id }: { id: string }) {
     }
 }
 
+export async function markImportant({ chatId, userId, important }: { chatId: string, userId: string, important: boolean }) {
+    try {
+        const document = await db.chats.update({
+            where: {
+                chatId_userId: {
+                    chatId, userId
+                }
+            },
+            data: {
+                important
+            }
+        })
+        if(document){
+            return { isSuccessful: true, error: "" }
+        }else{
+            return { isSuccessful: false, error: "Failed to mark as important" }
+        }
+    } catch (err) {
+        console.error(err);
+        return { isSuccessful: false, error: err }
+    }
+}

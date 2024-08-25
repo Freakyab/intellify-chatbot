@@ -21,6 +21,7 @@ model Chats {
   chatName String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  important Boolean @default(false)
 
   @@unique([chatId, userId])
 }

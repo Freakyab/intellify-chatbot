@@ -41,7 +41,6 @@ export default function Home() {
 
   useEffect(() => {
     fetchId();
-    // The empty dependency array ensures this runs only once
   }, [fetchId]);
 
   return (
