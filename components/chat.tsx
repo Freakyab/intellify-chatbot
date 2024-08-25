@@ -75,9 +75,10 @@ export default function Chat({
   return (
     <main className="flex w-full ">
       {userId && (
+
         <Sidenav updating={update} isOpen={isOpen} setIsOpen={setIsOpen} />
       )}
-      <div className="flex flex-col w-full md:p-12 py-12 px-2">
+      <div className="flex flex-col md:absolute md:right-0 w-[calc(100vw-27%)] md:top-10 p-2">
         <form
           className="w-full flex flex-row gap-2 items-center "
           onSubmit={handleSubmit}>
