@@ -2,10 +2,11 @@
 import { useActions, useUIState } from "ai/rsc";
 import { useEffect, useState } from "react";
 import { AI } from "@/app/(chat)/[id]/action";
-import { Loader2, Send, SidebarClose, SidebarIcon } from "lucide-react";
+import { Loader2, Send, SidebarIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { setChatName } from "@/app/action/chat";
+import useScreenSize from "@/lib/useScreenHeight";
 import Sidenav from "./sidenav";
 
 export default function Chat({
@@ -22,6 +23,12 @@ export default function Chat({
   const { submitMessage } = useActions();
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+  const screenSize = useScreenSize();
+  const [isMobileView, setIsMobileView] = useState(screenSize.width < 768);
+
+  useEffect(() => {
+    setIsMobileView(screenSize.width < 768);
+  }, [screenSize.width]);
 
   useEffect(() => {
     if (!userId) {
@@ -75,10 +82,21 @@ export default function Chat({
   return (
     <main className="flex w-full ">
       {userId && (
-
-        <Sidenav updating={update} isOpen={isOpen} setIsOpen={setIsOpen} />
+        <Sidenav
+          updating={update}
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          isMobileView={isMobileView}
+        />
       )}
-      <div className="flex flex-col md:absolute md:right-0 w-[calc(100vw-27%)] md:top-10 p-2">
+      <div
+        className={`flex flex-col top-10 absolute md:right-0 ${
+          userId
+            ? isMobileView
+            ? ""
+              : ` w-[calc(100vw-27%)] `
+            : "w-full top-10 absolute"
+        } p-2`}>
         <form
           className="w-full flex flex-row gap-2 items-center "
           onSubmit={handleSubmit}>

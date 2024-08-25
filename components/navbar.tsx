@@ -53,7 +53,7 @@ function Navbar() {
           <div className="flex-shrink-0">
             <span className="text-3xl font-bold text-gray-900">RAG</span>
           </div>
-          <div className="hidden md:flex items-center space-x-6 text-gray-900">
+          <div className={`${user.name ? "hidden" : ""} md:flex items-center space-x-6 text-gray-900`}>
             {user.name ? (
               <div className="flex items-center space-x-4">
                 {user.picture && (

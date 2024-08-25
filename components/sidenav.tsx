@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getChatData, deleteChat, markImportant } from "../app/action/chat";
 import { getCurrentUser } from "@/lib/getSession";
-import useScreenSize from "@/lib/useScreenHeight";
+
 import { signOut } from "next-auth/react";
 import Spinner from "./spinner";
 
@@ -32,22 +32,22 @@ function Sidenav({
   updating,
   isOpen,
   setIsOpen,
+  isMobileView,
 }: {
   updating: boolean;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  isMobileView: boolean;
 }) {
   const [data, setData] = useState<ChatProps[] | any>([]);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState("");
-  const screenSize = useScreenSize();
-  const [isMobileView, setIsMobileView] = useState(screenSize.width < 768);
+  
+  
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setIsMobileView(screenSize.width < 768);
-  }, [screenSize.width]);
+
 
   const [user, setUser] = useState<{
     name: string;
