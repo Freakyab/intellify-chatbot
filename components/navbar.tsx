@@ -41,7 +41,7 @@ function Navbar() {
 
   useEffect(() => {
     session();
-  }, []);
+  }, [user]);
 
   return (
     <nav

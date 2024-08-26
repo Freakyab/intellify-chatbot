@@ -35,11 +35,13 @@ function Page() {
       const error = response?.error;
       if (error) {
         toast.error(error);
+        
       } else {
         router.push("/");
         toast.success("Logged in successfully");
       }
     });
+    setFormData({ email: "", password: "", name: "" });
   };
 
   useEffect(() => {
