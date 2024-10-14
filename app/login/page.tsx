@@ -6,7 +6,7 @@ import ToastLayout from "@/components/toastLayout";
 
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { getCurrentUser } from "@/lib/getSession";
+import { getSession } from "@/lib/getSession";
 
 function Page() {
   const [isLogin, setIsLogin] = useState(true);
@@ -46,7 +46,7 @@ function Page() {
 
   useEffect(() => {
     const fetchSession = async () => {
-      const session = await getCurrentUser();
+      const session = await getSession();
       if (session) {
         router.push("/");
       }

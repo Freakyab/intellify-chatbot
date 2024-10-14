@@ -13,7 +13,7 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getChatData, deleteChat, markImportant } from "../app/action/chat";
-import { getCurrentUser } from "@/lib/getSession";
+import { getSession } from "@/lib/getSession";
 
 import { signOut } from "next-auth/react";
 import Spinner from "./spinner";
@@ -42,12 +42,14 @@ function Sidenav({
   const [data, setData] = useState<ChatProps[] | any>([]);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState("");
-  
-  
+  const [token, setToken] = useState({
+    inputTokenUsed: 0,
+    outputTokenUsed: 0,
+    priceCount: 0,
+  });
+
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-
 
   const [user, setUser] = useState<{
     name: string;
@@ -66,21 +68,46 @@ function Sidenav({
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const session = await getCurrentUser();
+      const session = await getSession();
       if (session) {
         const { id } = session.user;
         setUserId(id);
-        const { chats, error } = await getChatData(id);
+        const { chats, error, tokens } = await getChatData(id);
         if (error) {
           console.error("Error fetching chat data:", error);
         } else {
           setData(chats || []);
+          if (tokens) {
+            setToken({
+              inputTokenUsed: tokens.inputTokenUsed,
+              outputTokenUsed: tokens.outputTokenUsed,
+              priceCount: 0,
+            });
+            handleTokenUpdate(tokens);
+          }
         }
       }
       setLoading(false);
     }
     fetchData();
   }, [updating]);
+
+
+  const handleTokenUpdate = async (token: {
+    inputTokenUsed: number;
+    outputTokenUsed: number;
+    priceCount?: number;
+  }) => {
+    const inputTokenPerCost = 0.00015 / 1000;
+    const outputTokenPerCost = 0.0006 / 1000;
+    
+    const inputTokenCost = token.inputTokenUsed * inputTokenPerCost;
+    const outputTokenCost = token.outputTokenUsed * outputTokenPerCost;
+    
+    const priceCount = inputTokenCost + outputTokenCost;
+    console.log(priceCount);
+    setToken({ ...token, priceCount });
+  };
 
   const handleDelete = useCallback(
     async (chatId: string) => {
@@ -119,8 +146,8 @@ function Sidenav({
     [userId, router]
   );
 
-  const session = async () => {
-    const session = await getCurrentUser();
+  const sessionCall = async () => {
+    const session = await getSession();
     if (session?.user) {
       const { name, email, id, image } = session.user;
       if (name && email && id) {
@@ -203,7 +230,6 @@ function Sidenav({
   };
 
   const handleDropdownToggle = (index: number) => {
-    console.log(index);
     if (index === dropdownIndex) {
       setDropdownIndex(null);
     } else {
@@ -212,7 +238,7 @@ function Sidenav({
   };
 
   useEffect(() => {
-    session();
+    sessionCall();
   }, []);
 
   return (
@@ -258,6 +284,13 @@ function Sidenav({
             ) : (
               <div className="flex flex-col flex-grow max-h-[90%] md:max-h-full overflow-y-auto scroll-auto scroll-p-1">
                 <div className="flex flex-col py-2">
+                  <p className="uppercase text-gray-400 text-lg border-b-2 mb-2">
+                    {token &&
+                      `Bill: $${Number(token.priceCount.toFixed(4))}/$10 `}
+                    <span className="text-red-300">
+                      (₹{Number(token.priceCount * 83.3).toFixed(4)})
+                    </span>
+                  </p>
                   {Object.entries(groupedChats).map(
                     ([section, chats]) =>
                       chats.length > 0 && (

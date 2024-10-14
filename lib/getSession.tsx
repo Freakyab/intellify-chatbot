@@ -1,7 +1,9 @@
 "use server"
 import { getAuthSession } from "@/app/auth"
 
-export async function getCurrentUser() {
-	const session = await getAuthSession()
-	return session;
-}
+const getSession = async () => {
+    const session = await getAuthSession();
+    return session;
+};
+
+export { getSession };

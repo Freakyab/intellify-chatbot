@@ -32,11 +32,21 @@ export async function getChatData(userId: string) {
                 userId
             },
             orderBy: {
-                updatedAt: 'desc' // Ensure you have a 'createdAt' field or adjust according to your schema
+                updatedAt: 'desc'
             }
         });
 
-        return { chats: documents, error: "", isEmpty: false };
+        const tokens = await db.accounts.findUnique({
+            where: {
+                id: userId
+            },
+            select: {
+                inputTokenUsed: true,
+                outputTokenUsed: true
+            }
+        })
+
+        return { chats: documents, error: "", isEmpty: false, tokens };
     } catch (err) {
         return { chats: [], error: err, isEmpty: true };
     }
@@ -81,28 +91,89 @@ export async function getData({ chatId, userId }: { chatId: string, userId: stri
     }
 }
 
-export async function setData({ chatId, userId, messages }: { chatId: string, userId: string, messages: Prisma.InputJsonValue[] }) {
-    try {
-        if (!/^\d+$/.test(chatId) || chatId.length < 16) {
-            return { error: "Invalid chat ID format" };
-        }
-        const updateDoc = await db.chats.update({
-            where: {
-                chatId_userId: {
-                    chatId, userId
-                }
-            },
-            data: {
-                messages,
-                updatedAt: new Date()
-            }
-        })
-        return updateDoc;
-    } catch (err) {
-        console.error(err);
-        return null;
+export async function setData({
+  chatId,
+  userId,
+  messages,
+}: {
+  chatId: string;
+  userId: string;
+  messages: Prisma.InputJsonValue[];
+}) {
+  try {
+    if (!/^\d+$/.test(chatId) || chatId.length < 16) {
+      return { error: "Invalid chat ID format" };
     }
+
+    // Calculate the cost of input tokens used and output tokens used in new messages
+    const newInputTokensUsed = messages.reduce((acc, item: any) => {
+      if (item.role === "assistant" && item.token?.tokenInputStream != null) {
+        acc += item.token?.tokenInputStream ?? 0;
+      }
+      return acc;
+    }, 0);
+
+    const newOutputTokensUsed = messages.reduce((acc, item: any) => {
+      if (item.role === "assistant" && item.token?.tokenOutputStream != null) {
+        acc += item.token?.tokenOutputStream ?? 0;
+      }
+      return acc;
+    }, 0);
+
+    const existingAccount = await db.accounts.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        inputTokenUsed: true,
+        outputTokenUsed: true,
+      },
+    });
+
+    if (!existingAccount) {
+      return { error: "Account not found" };
+    }
+
+    // Update token usage by incrementing the existing token values
+    const updatedAccount = await db.accounts.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        inputTokenUsed: {
+          increment: parseInt(newInputTokensUsed.toString()),
+        },
+        outputTokenUsed: {
+          increment: parseInt(newOutputTokensUsed.toString()),
+        },
+      },
+    });
+
+    // Update the chat document with the new messages and updated timestamp
+    const updatedChat = await db.chats.update({
+      where: {
+        chatId_userId: {
+          chatId,
+          userId,
+        },
+      },
+      data: {
+        messages,
+        updatedAt: new Date(),
+      },
+    });
+
+    if (!updatedAccount || !updatedChat) {
+      return { error: "Failed to update data" };
+    }
+
+    return updatedChat;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
 }
+
 
 export async function deleteChat({ chatId, userId }: { chatId: string, userId: string }) {
     try {
@@ -155,13 +226,55 @@ export async function markImportant({ chatId, userId, important }: { chatId: str
                 important
             }
         })
-        if(document){
+        if (document) {
             return { isSuccessful: true, error: "" }
-        }else{
+        } else {
             return { isSuccessful: false, error: "Failed to mark as important" }
         }
     } catch (err) {
         console.error(err);
         return { isSuccessful: false, error: err }
+    }
+}
+
+export async function getTokenData({ userId, chatId }: { userId: string, chatId: string }) {
+    try {
+        const document = await db.chats.findUnique({
+            where: {
+                chatId_userId: {
+                    chatId, userId
+                }
+            }
+        });
+
+        // Calculate the cost of input tokens used
+        const InputTokensUsed = document?.messages.reduce((acc, item: any) => {
+            if (item.role === "assistant" && item.token?.tokenInputStream != null) {
+                acc += item.token?.tokenInputStream ?? 0;
+            }
+            return acc;
+        }, 0);
+
+        // Calculate the number of output tokens used
+        const OutputTokensUsed = document?.messages.reduce((acc, item: any) => {
+            if (item.role === "assistant" && item.token?.tokenOutputStream != null) {
+                acc += item.token?.tokenOutputStream ?? 0;
+            }
+            return acc;
+        }, 0);
+
+        // Calculate the total tokens used
+        const TotalTokensUsed = document?.messages.reduce((acc, item: any) => {
+            if (item.role === "assistant" && item.token?.tokenStream != null) {
+                acc += item.token?.tokenStream ?? 0;
+            }
+            return acc;
+        }, 0);
+
+        return { InputTokensUsed, OutputTokensUsed, TotalTokensUsed, error: "" };
+
+    } catch (err) {
+        console.error(err);
+        return { InputTokensUsed: 0, OutputTokensUsed: 0, TotalTokensUsed: 0, error: err };
     }
 }

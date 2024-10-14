@@ -14,23 +14,25 @@ datasource db {
 }
 
 model Chats {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
-  chatId   String
-  userId   String
-  messages Json[]
-  chatName String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  chatId    String
+  userId    String
+  messages  Json[]
+  chatName  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  important Boolean @default(false)
+  important Boolean  @default(false)
 
   @@unique([chatId, userId])
 }
 
 model Accounts {
-  id      String @id @default(auto()) @map("_id") @db.ObjectId
-  name    String
-  email   String
-  picture String?
-  password String
-  createdAt DateTime @default(now())
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  inputTokenUsed  Int      @default(0)
+  outputTokenUsed Int      @default(0)
+  email           String
+  picture         String?
+  password        String
+  createdAt       DateTime @default(now())
 }

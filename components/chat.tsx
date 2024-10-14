@@ -17,7 +17,7 @@ export default function Chat({
   userId?: string;
 }) {
   const [input, setInput] = useState("");
-  const [update, setUpdate] = useState(false); // Initialize update to false
+  const [update, setUpdate] = useState(false);
   const [messages, setMessages] = useUIState<typeof AI>();
   const [isFirstEntry, setIsFirstEntry] = useState(false);
   const { submitMessage } = useActions();
@@ -44,12 +44,13 @@ export default function Chat({
   }, [chatId, isFirstEntry]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setLoading(true);
+    setUpdate(true); // Trigger an update to Sidenav
     e.preventDefault();
     if (!input) {
       return;
     }
 
-    setLoading(true);
     try {
       if (messages.length % 5 === 0 && userId) {
         const getName = await fetch("/api/completion", {
@@ -61,14 +62,11 @@ export default function Chat({
         });
         const { reply } = await getName.json();
         if (reply && userId) {
-          setUpdate(true); // Trigger an update to Sidenav
           await setChatName(chatId, userId, reply);
-          setUpdate(false); // Reset update state after setting the chat name
         }
       }
       const responseMessage = await submitMessage(input);
       setMessages([...messages, responseMessage]);
-
       if (isFirstEntry) {
         setIsFirstEntry(false); // Ensure the first entry is marked as handled
       }
@@ -76,6 +74,7 @@ export default function Chat({
       console.error(e);
     }
     setLoading(false);
+    setUpdate(false); // Reset update state after setting the chat name
     setInput("");
   };
 
@@ -93,7 +92,7 @@ export default function Chat({
         className={`flex flex-col top-10 absolute md:right-0 ${
           userId
             ? isMobileView
-            ? ""
+              ? ""
               : ` w-[calc(100vw-27%)] `
             : "w-full top-10 absolute"
         } p-2`}>

@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/getSession";
+import { getSession } from "@/lib/getSession";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 
@@ -19,15 +19,18 @@ function Navbar() {
   });
   const router = useRouter();
 
-  const session = async () => {
-    const session = await getCurrentUser();
+  // Updated the session function to fetch user data
+  const fetchSession = useCallback(async () => {
+    const session = await getSession();
     if (session?.user) {
       const { name, email, id, image } = session.user;
-      if (name && email && id) {
-        setUser({ name, email, id, picture: image ?? "" });
-      }
+      setUser({ name: name ?? "", email: email ?? "", id: id ?? "", picture: image ?? "" });
     }
-  };
+  }, []); // Removed `user` from dependencies
+
+  useEffect(() => {
+    fetchSession(); // Fetch session on component mount
+  }, []); // Empty dependency array ensures this runs only once
 
   const handleLogin = () => {
     router.push("/login");
@@ -39,15 +42,8 @@ function Navbar() {
     });
   };
 
-  useEffect(() => {
-    session();
-  }, [user]);
-
   return (
-    <nav
-      className="fixed w-screen top-0 z-40 bg-white bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 border
-     border-gray-100 shadow-lg">
-      
+    <nav className="fixed w-screen top-0 z-40 bg-white bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 border border-gray-100 shadow-lg">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
@@ -69,8 +65,7 @@ function Navbar() {
                   {user.name}
                 </p>
                 <div className="hidden md:block h-6 border-r border-gray-300"></div>
-                <p className="hover:text-[#264653] cursor-pointer transition-colors duration-300"
-                  onClick={() => router.push("/")}>
+                <p className="hover:text-[#264653] cursor-pointer transition-colors duration-300" onClick={() => router.push("/")}>
                   Create new
                 </p>
                 <div className="hidden md:block h-6 border-r border-gray-300"></div>

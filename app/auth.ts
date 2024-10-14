@@ -73,7 +73,6 @@ export const authOptions: NextAuthOptions = {
                     } else {
                         const user = await getUser(email, password);
                         if (user) {
-                            
                             token.userId = user.id;
                         }
                     }

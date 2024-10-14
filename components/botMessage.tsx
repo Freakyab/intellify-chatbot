@@ -3,14 +3,17 @@ import { Bot, User2 } from "lucide-react";
 import Markdown from "./markdown";
 
 export const BotMessage = ({
+  lastMessage,
   role,
   content,
   token,
 }: {
+  lastMessage?: boolean;
   role: string;
   content: string;
   token?: Number | undefined;
 }) => {
+  
   return (
     <div
       className={`px-4 pt-2 mr-3 border-2 shadow-md rounded-md h-fit ml-10 relative  ${
@@ -18,7 +21,7 @@ export const BotMessage = ({
       }`}
         style={{zIndex: 1}}
       >
-      <Markdown text={content} />
+      <Markdown text={content} role={role} lastMessage={lastMessage}/>
       {role === "user" ? (
         //  make first letter capital
         <User2

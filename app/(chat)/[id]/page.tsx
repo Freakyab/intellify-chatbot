@@ -2,16 +2,15 @@ import React from "react";
 import { AI } from "./action";
 import Chat from "@/components/chat";
 import { getData } from "@/app/action/chat";
-import { getCurrentUser } from "@/lib/getSession";
+import { getSession } from "@/lib/getSession";
 export interface ChatPageProps {
   params: { id: string };
 }
 async function Page({ params }: ChatPageProps) {
   try {
     const chatId = params.id;
-    const session = await getCurrentUser();
+    const session = await getSession();
     const userId = session?.user.id;
-
     const { messages, error } = await getData({
       chatId,
       userId,
@@ -21,7 +20,11 @@ async function Page({ params }: ChatPageProps) {
 
     if (error) {
       console.error("Error fetching chat data:", error);
-      return <div className="text-red-500">Error loading page.</div>;
+      return (
+        <div className="text-red-500 flex h-screen w-screen justify-center items-center">
+          Error loading page.
+        </div>
+      );
     }
 
     return (
@@ -36,7 +39,11 @@ async function Page({ params }: ChatPageProps) {
     );
   } catch (err) {
     console.error("Error in Page component:", err);
-    return <div>Error loading page.</div>;
+    return (
+      <div className="text-red-500 flex h-screen w-screen justify-center items-center">
+        Error loading page.
+      </div>
+    );
   }
 }
 

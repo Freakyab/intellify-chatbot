@@ -24,7 +24,7 @@ export default function RootLayout({
         <script src="https://unpkg.com/flowbite@1.5.3/dist/flowbite.js"></script>
         <NextAuthProvider>
           <Navbar />
-          <div  className="relative top-10">{children}</div>
+            <div className="relative top-10">{children}</div>
           <ToastLayout />
         </NextAuthProvider>
       </body>

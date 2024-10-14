@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/getSession";
+import {  getSession } from "@/lib/getSession";
 import { getUnnameChats } from "./action/chat";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -17,9 +17,11 @@ export default function Home() {
 
   // Use useCallback to memoize the fetchId function
   const fetchId = useCallback(async () => {
+  
     try {
+      setLoading(true);
       const id = await generateId();
-      const session = await getCurrentUser();
+      const session = await getSession();
       if (session?.user?.id) {
         const userId = session.user.id as string;
         const doc = await getUnnameChats({ id: userId });
