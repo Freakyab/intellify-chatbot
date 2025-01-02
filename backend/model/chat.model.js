@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const client = require('../config');
 
 const chatSchema = new Schema(
   {
@@ -26,6 +27,6 @@ const chatSchema = new Schema(
   }
 );
 
-const Chat = mongoose.model("Chat", chatSchema);
+const Chat = client.model("Chat", chatSchema);
 
 module.exports = Chat;

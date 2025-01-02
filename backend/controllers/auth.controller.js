@@ -5,13 +5,13 @@ const router = express.Router();
 
 router.post("/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      throw new Error("Username, password and email are required");
+    const { email, password } = req.body;
+    if (!email || !password) {
+      throw new Error("email, password and email are required");
     }
 
     // Check if user exists
-    const user = await User.findOne({ username, password });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
         status: "error",
@@ -22,7 +22,7 @@ router.post("/login", async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "User logged in successfully",
-      data: user,
+      user,
     });
   } catch (error) {
     console.error(error);
@@ -35,7 +35,7 @@ router.post("/login", async (req, res) => {
 
 router.post("/register", async (req, res) => {
   try {
-    const { username, password, email, picture } = req.body;
+    const { username, password, email } = req.body;
     if (!username || !password || !email) {
       throw new Error("Username, password and email are required");
     }
@@ -50,18 +50,16 @@ router.post("/register", async (req, res) => {
     const newUser = new User({
       username,
       password,
-      picture,
       email,
     });
 
     // Save user to database
     await newUser.save();
-
     if (newUser) {
       return res.status(200).json({
         status: "success",
         message: "User registered successfully",
-        data: newUser,
+        user: newUser,
       });
     }
 

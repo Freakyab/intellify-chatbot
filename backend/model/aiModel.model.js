@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const client = require('../config');
 
 const aiModelSchema = new Schema(
   {
@@ -17,6 +18,6 @@ const aiModelSchema = new Schema(
   }
 );
 
-const AiModel = mongoose.model("AiModel", aiModelSchema);
+const AiModel = client.model("AiModel", aiModelSchema);
 
 module.exports = AiModel;

@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/auth", require("./controllers/auth.controller"));
-app.use("/user", require("./controllers/user.controller"));
+// app.use("/user", require("./controllers/user.controller"));
 app.use("/chat", require("./controllers/chat.controller"));
 app.use("/billing", require("./controllers/billing.controller"));
 

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const client = require('./../config');
 
 const userSchema = new Schema(
   {
@@ -25,6 +26,6 @@ const userSchema = new Schema(
   }
 );
 
-const User = mongoose.model("User", userSchema);
+const User = client.model("User", userSchema);
 
 module.exports = User;

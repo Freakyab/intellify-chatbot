@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const client = require('../config');
 
 const billingSchema = new Schema(
   {
@@ -30,6 +31,6 @@ const billingSchema = new Schema(
   }
 );
 
-const Billing = mongoose.model("Billing", billingSchema);
+const Billing = client.model("Billing", billingSchema);
 
 module.exports = Billing;
