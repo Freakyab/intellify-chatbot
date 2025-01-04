@@ -75,11 +75,7 @@ export async function POST(req: Request) {
                         chatId
                     }
                 ];
-                let textContent = '';
-                for await (const chunk of result.textStream) {
-                    textContent += chunk;
-                }
-                console.log(textContent);
+
                 try {
                     const response = await saveChat({ backendData });
                     if (response.status === 'error') {
