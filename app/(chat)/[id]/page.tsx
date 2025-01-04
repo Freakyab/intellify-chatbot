@@ -11,7 +11,8 @@ import {
 import React, { useCallback, useEffect } from "react";
 import { useChat } from "ai/react";
 import { getSession } from "@/lib/session";
-import { getChat } from "@/app/actions/chat";
+import { generateTitle, getChat } from "@/app/actions/chat";
+import Markdown from "@/components/ui/markdown";
 
 type SessionDetails = {
   user: {
@@ -31,6 +32,8 @@ function Page({
   const [token, setToken] = React.useState<number>(0);
   const [session, setSession] = React.useState<SessionDetails | null>(null);
   const [initialMessages, setInitialMessages] = React.useState<any[]>([]);
+  const [isSummaryGenerateEnabled, setIsSummaryGenerateEnabled] =
+    React.useState(true);
   const { messages, input, handleInputChange, handleSubmit, isLoading } =
     useChat({
       body: {
@@ -60,25 +63,42 @@ function Page({
     try {
       const session = await getSession();
       setSession(session as SessionDetails);
-
       if (session && session.user.id && params.id) {
         const response = await getChat({
           chatId: params.id,
           userId: session.user.id,
         });
-        setInitialMessages(response.data || []);
-        setToken(response.totalToken);
+        if (response.data) {
+          setIsSummaryGenerateEnabled(false);
+          setInitialMessages(response.data);
+          setToken(response.totalToken);
+        } else {
+          setIsSummaryGenerateEnabled(true);
+          setInitialMessages([]);
+        }
       }
     } catch (error: any) {
       console.error("Error fetching session or chat:", error.message);
     }
-  }, [params.id]);
+  }, [params.id, setSession, setInitialMessages]);
 
   const getWidth = useCallback(() => {
     const width = (token / 50) * 0.001 * 100;
     if (width > 100) return 100;
     return width;
   }, [token]);
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isLoading && !input) return;
+    handleSubmit();
+    try {
+      const response = await generateTitle({ messages });
+      console.log("Title:", response);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     fetchSessionAndChat();
@@ -124,7 +144,7 @@ function Page({
                       <Bot className="text-primary" size={24} />
                     </div>
                     <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-primary/10 p-4 font-mono text-sm leading-relaxed text-gray-800 shadow-lg">
-                      {m.content}
+                      <Markdown text={m.content} role={m.role} />
                     </div>
                   </div>
                 )}
@@ -145,11 +165,7 @@ function Page({
           {/* Input Area */}
           <form
             className="rounded-xl bg-white shadow-lg"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (isLoading) return;
-              handleSubmit();
-            }}>
+            onSubmit={handleFormSubmit}>
             <div className="p-4">
               <Input
                 value={input}

@@ -1,3 +1,5 @@
+import { Message } from "ai";
+
 export const saveChat = async ({
   backendData,
 }: {
@@ -22,7 +24,6 @@ export const saveChat = async ({
     });
     const responseJson = await response.json();
     if (responseJson.status === "error") {
-      console.log("responseJson", responseJson);
       throw new Error(responseJson.message);
     }
     if (responseJson.data === null) {
@@ -55,6 +56,8 @@ export const getChat = async ({
       }),
     });
     const responseJson = await response.json();
+    // console.log("responseJson", responseJson);
+
     if (responseJson.status === "error") {
       throw new Error(responseJson.message);
     }
@@ -66,3 +69,59 @@ export const getChat = async ({
     throw new Error(error.message);
   }
 };
+
+export const getHistory = async ({ userId }: { userId: string }) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/chat/history/${userId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const responseJson = await response.json();
+    // console.log("responseJson", responseJson);
+
+    if (responseJson.status === "error") {
+      throw new Error(responseJson.message);
+    }
+    if (responseJson.data === null) {
+      throw new Error("Chat not found");
+    }
+    return responseJson;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
+export const generateTitle = async ({
+  messages,
+}: {
+  messages : Message[],
+}) => {
+  try {
+    console.log("messages");
+    const response = await fetch("/api/summary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages,
+      }),
+    });
+    const responseJson = await response.json();
+    if (responseJson.status === "error") {
+      console.log("responseJson", responseJson);
+      throw new Error(responseJson.message);
+    }
+    if (responseJson.data === null) {
+      throw new Error("Title not generated");
+    }
+    return responseJson.reply;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}

@@ -46,7 +46,6 @@ function Page() {
     const fetchSession = async () => {
       const session = await getSession();
       if (session) {
-        console.log(session);
         console.log("Session found");
         // router.push("/");
       }

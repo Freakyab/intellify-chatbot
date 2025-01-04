@@ -29,6 +29,10 @@ const chatSchema = new Schema(
       type: String,
       required: true,
     },
+    title : {
+      type: String,
+      required: false,
+    }
   },
 );
 

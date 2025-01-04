@@ -7,7 +7,6 @@ const router = express.Router();
 router.post("/add", async (req, res) => {
   try {
     const { backendData } = req.body;
-    console.log(backendData[0].timeStamp);
     if (backendData.length < 2) {
       return res.status(400).json({
         status: "error",
@@ -28,7 +27,6 @@ router.post("/add", async (req, res) => {
 
     chat.save();
     chat1.save();
-    console.log(chat,chat1);
 
     res.status(200).json({
       status: "success",
@@ -100,9 +98,18 @@ router.post("/prev/:chatId", async (req, res) => {
   }
 });
 
-router.get("/list", async (req, res) => {
+router.get("/list/:id", async (req, res) => {
   try {
-    const chats = await Chat.find().populate("userId");
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid user",
+      });
+    }
+    const chats = await Chat.find({
+      userId: id,
+    }).populate("userId");
     res.status(200).json({
       status: "success",
       message: "Chats fetched successfully",

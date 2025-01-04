@@ -14,7 +14,7 @@ export async function POST(req: Request) {
         messages: Message[],
         chatId: string,
         userId: string,
-        timeStamp: string
+        timeStamp: string,
     } =
         await req.json();
 
@@ -47,10 +47,15 @@ export async function POST(req: Request) {
         const result = await streamText({
             model: google('models/gemini-1.5-flash-latest'),
             messages: convertedMessages,
-            temperature: 0.2,
+            temperature: 1,
+            topP: 0.95,
+            topK: 40,
+            maxTokens: 8192,
+
             system: `
             You are a general-purpose chatbot which assists users in their queries.
-            Also, you will consider the history of the conversation to provide better responses.`,
+            Also, you will consider the history of the conversation to provide better responses.
+            `,
             onFinish: async ({ text, usage }) => {
                 const backendData = [
                     {
@@ -70,7 +75,11 @@ export async function POST(req: Request) {
                         chatId
                     }
                 ];
-
+                let textContent = '';
+                for await (const chunk of result.textStream) {
+                    textContent += chunk;
+                }
+                console.log(textContent);
                 try {
                     const response = await saveChat({ backendData });
                     if (response.status === 'error') {

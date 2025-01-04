@@ -34,7 +34,6 @@ async function authenticate({
       throw new Error("Something went wrong");
     } else {
       const user = await fetchUser({ email, password });
-      console.log(user, "user");
       if (user !== null && user !== undefined) {
         return user;
       }

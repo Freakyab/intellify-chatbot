@@ -30,7 +30,6 @@ export const authOptions: NextAuthOptions = {
               password: credentials.password,
               username: credentials.name,
             });
-            console.log(response,"response");
             if (response?.user !== undefined && response?.user !== null) {
               const { user } = response;
               return { ...user, id: user._id , name: user.username, pic: user.picture};
