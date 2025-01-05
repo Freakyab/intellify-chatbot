@@ -1,6 +1,6 @@
 import { saveChat } from '@/app/actions/chat';
 import { google } from '@ai-sdk/google';
-import { Message, streamText } from 'ai';
+import { generateText, Message } from 'ai';
 
 // Define the expected message types
 type CoreMessage = {
@@ -44,52 +44,72 @@ export async function POST(req: Request) {
     }
 
     try {
-        const result = await streamText({
+        const result = await generateText({
             model: google('models/gemini-1.5-flash-latest'),
             messages: convertedMessages,
             temperature: 1,
             topP: 0.95,
             topK: 40,
-            maxTokens: 8192,
-
+            maxTokens: 1000,
             system: `
-            You are a general-purpose chatbot which assists users in their queries.
-            Also, you will consider the history of the conversation to provide better responses.
+            - you are an AI assistant
+            - you are assisting a user
+            - you provide maximum information to the user
+            - you are polite and helpful
+            - use minimum tokens to generate a response
             `,
-            onFinish: async ({ text, usage }) => {
-                const backendData = [
-                    {
-                        role: "user",
-                        content: messages[messages.length - 1].content,
-                        token: usage.promptTokens,
-                        timeStamp,
-                        userId,
-                        chatId
-                    },
-                    {
-                        role: "assistant",
-                        content: text,
-                        token: usage.completionTokens,
-                        timeStamp: new Date().toISOString(),
-                        userId,
-                        chatId
-                    }
-                ];
 
-                try {
-                    const response = await saveChat({ backendData });
-                    if (response.status === 'error') {
-                        saveFailed = true;
-                    }
-                } catch (error) {
-                    console.error('Failed to save chat:', error);
-                    saveFailed = true;
-                }
-            }
         });
 
+        const backendData = [
+            {
+                role: "user",
+                content: messages[messages.length - 1].content,
+                token: result.usage.promptTokens,
+                timeStamp,
+                userId,
+                chatId
+            },
+            {
+                role: "assistant",
+                content: result.text,
+                token: result.usage.completionTokens,
+                timeStamp: new Date().toISOString(),
+                userId,
+                chatId
+            }
+        ];
+
+        const response = await saveChat({ backendData });
+        console.log('response', response.data);
+        if (response.status === 'error') {
+            saveFailed = true;
+            throw new Error(response.message);
+        }
+
         if (!saveFailed) {
-            return result.toDataStreamResponse();
+            // string to stremable data
+            // const data = sresult.text);
+
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(encoder.encode(JSON.stringify({
+                        text: result.text,
+                        id : response._id,
+                        usage: result.usage
+                    })));
+                    controller.close();
+                }
+            });
+            return new Response(stream, {
+
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+
+            });
+
         } else {
             return new Response(
                 JSON.stringify({ error: 'Failed to save chat, response generation aborted' }),

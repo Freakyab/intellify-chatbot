@@ -2,11 +2,18 @@
 import React, { useState } from "react";
 import markdownit from "markdown-it";
 import dompurify from "dompurify";
-import { TypewriterEffect } from "@/components/ui/typewriter-effect";
+import { TypewriterEffect } from "./typewriter-effect"
 
-function Markdown({ text, role }: { text: string; role: string }) {
-  
-  const [isComplete, setIsComplete] = useState(role === "user");
+function Markdown({
+  text,
+  role,
+  lastMessage,
+}: {
+  text: string;
+  role: string;
+  lastMessage?: boolean;
+}) {
+  const [isComplete, setIsComplete] = useState(role === "user" || !lastMessage);
 
   const md = markdownit();
   const htmlContent = md.render(text);
@@ -16,7 +23,7 @@ function Markdown({ text, role }: { text: string; role: string }) {
   const handleTypingComplete = () => {
     setIsComplete(true);
   };
-  console.log("Markdown -> text", isComplete);
+
   return (
     <div className="w-[90%]">
       {/* Conditionally render Markdown or TypewriterEffect */}
@@ -24,7 +31,7 @@ function Markdown({ text, role }: { text: string; role: string }) {
         // Render sanitized Markdown content when typing is complete
         <div
           dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-          className=""></div>
+          className="mt-4"></div>
       ) : (
         // Render the Typewriter effect until complete
         <TypewriterEffect

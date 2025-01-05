@@ -8,8 +8,18 @@ export async function POST(req: NextRequest) {
 
         const model = genai.getGenerativeModel({ model: 'gemini-pro' });
 
-        const newPrompt = `create the title for this chat using ${messages} array 
-        understand the context of the chat and generate a title that best describes the chat in less than 15 words else generate a title that best describes the first index of the chat in less than 15 words
+        const newMessage = messages
+            .slice(0, 5)
+            .map((message: {
+                content: string;
+            }) => message.content).join(' ');
+
+        const newPrompt =
+            `-create the title for this data using ${JSON.stringify(newMessage)} array summarize the data.
+        - the output should be a string 
+        - dont return markdown
+        - remember the length of the title should be less than 10 characters
+        
         `;
 
         const streamingResponse = await model.generateContentStream(newPrompt);

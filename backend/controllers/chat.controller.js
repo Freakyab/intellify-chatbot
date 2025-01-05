@@ -1,6 +1,6 @@
 const express = require("express");
 const Chat = require("../model/chat.model");
-const User = require("../model/user.model");
+const Title = require("../model/title.model");
 
 const router = express.Router();
 
@@ -107,13 +107,102 @@ router.get("/list/:id", async (req, res) => {
         message: "Invalid user",
       });
     }
-    const chats = await Chat.find({
-      userId: id,
-    }).populate("userId");
+
+    // find the first chat document of the user
+    const chats = await Title.find({ userId: id });
+    if (chats.length === 0) {
+      return res.status(200).json({
+        status: "success",
+        message: "No chat found",
+      });
+    }
     res.status(200).json({
       status: "success",
       message: "Chats fetched successfully",
       data: chats,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+});
+
+router.post("/title", async (req, res) => {
+  try {
+    const { title, chatId, userId } = req.body;
+    if (!title || !chatId || !userId) {
+      return res.status(400).json({
+        status: "error",
+        message: !title
+          ? "Title is required"
+          : !chatId
+          ? "ChatId is required"
+          : "UserId is required",
+      });
+    }
+
+    const titleData = new Title({
+      title,
+      userId,
+      chatId,
+    });
+
+    titleData.save();
+
+    if (!titleData) {
+      return res.status(400).json({
+        status: "error",
+        message: "Title not created",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Title created successfully",
+      data: titleData,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+}); 
+
+router.put("/title", async (req, res) => {
+  try {
+    const { title, chatId, userId } = req.body;
+    console.log(title, chatId, userId);
+    if (!title || !chatId || !userId) {
+      return res.status(400).json({
+        status: "error",
+        message: !title
+          ? "Title is required"
+          : !chatId
+          ? "ChatId is required"
+          : "UserId is required",
+      });
+    }
+
+    const titleData = await Title.findOneAndUpdate(
+      { userId: userId, chatId: chatId },
+      { title: title },
+      { new: true }
+    );
+
+    if (!titleData) {
+      return res.status(400).json({
+        status: "error",
+        message: "Title not updated",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Title updated successfully",
+      data: titleData,
     });
   } catch (error) {
     res.status(400).json({

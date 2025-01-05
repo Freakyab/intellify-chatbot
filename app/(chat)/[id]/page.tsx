@@ -5,14 +5,22 @@ import {
   Bot,
   ChartNoAxesCombined,
   Loader2,
+  MessageCircle,
   Send,
   User2,
 } from "lucide-react";
 import React, { useCallback, useEffect } from "react";
 import { useChat } from "ai/react";
 import { getSession } from "@/lib/session";
-import { generateTitle, getChat } from "@/app/actions/chat";
+import {
+  generateTitle,
+  getChat,
+  getHistory,
+  saveTitle,
+} from "@/app/actions/chat";
 import Markdown from "@/components/ui/markdown";
+import { useRouter } from "next/navigation";
+import { getTotalToken } from "@/app/actions/user";
 
 type SessionDetails = {
   user: {
@@ -32,25 +40,59 @@ function Page({
   const [token, setToken] = React.useState<number>(0);
   const [session, setSession] = React.useState<SessionDetails | null>(null);
   const [initialMessages, setInitialMessages] = React.useState<any[]>([]);
-  const [isSummaryGenerateEnabled, setIsSummaryGenerateEnabled] =
-    React.useState(true);
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
-      body: {
-        chatId: params.id,
-        userId: session?.user.id,
-        timeStamp: new Date().toISOString(),
-      },
-      api: "/api/chat/",
-      initialMessages: initialMessages,
-      onFinish(message, options) {
-        setToken((prev) => prev + options.usage.totalTokens);
-      },
-      onError(error) {
+  const [history, setHistory] = React.useState<
+    {
+      _id: string;
+      title: string;
+      chatId: string;
+      userId: string;
+    }[]
+  >([]);
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    setMessages,
+  } = useChat({
+    body: {
+      chatId: params.id,
+      userId: session?.user.id,
+      timeStamp: new Date().toISOString(),
+    },
+    api: "/api/chat/",
+    streamProtocol: "text",
+    initialMessages: initialMessages,
+    onFinish(message) {
+      const data = JSON.parse(message.content);
+      const usage = data.usage;
+      const text = data.text;
+      const error = data.error;
+      if (error) {
         console.error(error);
-      },
-    });
-
+        return;
+      }
+      setMessages([
+        ...messages,
+        {
+          id: new Date().toISOString(),
+          content: input,
+          role: "user",
+        },
+        {
+          id: message.id,
+          content: text,
+          role: "assistant",
+        },
+      ]);
+      setToken(token + usage.completionTokens);
+    },
+    onError(error) {
+      console.error(error);
+    },
+  });
+  const router = useRouter();
   const [chatContainerRef, setChatContainerRef] =
     React.useState<HTMLDivElement | null>(null);
 
@@ -68,19 +110,33 @@ function Page({
           chatId: params.id,
           userId: session.user.id,
         });
+
+        const allHistory = await getHistory({ userId: session.user.id });
         if (response.data) {
-          setIsSummaryGenerateEnabled(false);
           setInitialMessages(response.data);
           setToken(response.totalToken);
         } else {
-          setIsSummaryGenerateEnabled(true);
           setInitialMessages([]);
+        }
+
+        if (allHistory.data) {
+          setHistory(allHistory.data);
+        }
+
+        const tokenResponse = await getTotalToken({ userId: session.user.id });
+        console.log(tokenResponse);
+        if (tokenResponse.status === "error") {
+          throw new Error(tokenResponse.message);
+        } else {
+          setToken(tokenResponse.data);
         }
       }
     } catch (error: any) {
       console.error("Error fetching session or chat:", error.message);
     }
-  }, [params.id, setSession, setInitialMessages]);
+  }, [params.id, setSession, setInitialMessages, setMessages]);
+//  }, [params.id, ])  ;
+
 
   const getWidth = useCallback(() => {
     const width = (token / 50) * 0.001 * 100;
@@ -93,8 +149,28 @@ function Page({
     if (isLoading && !input) return;
     handleSubmit();
     try {
-      const response = await generateTitle({ messages });
-      console.log("Title:", response);
+      console.log(messages.length);
+      if (messages.length == 0 || messages.length % 4 == 0) {
+        const response = await generateTitle({ messages });
+        if (response.status === "error") {
+          throw new Error(response.message);
+        } else {
+          if (response && session?.user.id) {
+            const titleSavingResponse = await saveTitle({
+              title: response,
+              chatId: params.id,
+              userId: session?.user.id,
+              method: messages.length == 0 ? "POST" : "PUT",
+            });
+
+            if (titleSavingResponse.status === "error") {
+              throw new Error(titleSavingResponse.message);
+            } else {
+              console.log("Title saved successfully");
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error(error);
     }
@@ -144,7 +220,11 @@ function Page({
                       <Bot className="text-primary" size={24} />
                     </div>
                     <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-primary/10 p-4 font-mono text-sm leading-relaxed text-gray-800 shadow-lg">
-                      <Markdown text={m.content} role={m.role} />
+                      <Markdown
+                        text={m.content}
+                        role={m.role}
+                        lastMessage={messages.length - 1 === index}
+                      />
                     </div>
                   </div>
                 )}
@@ -197,7 +277,21 @@ function Page({
         {/* Sidebar */}
         <div className="w-1/4 flex flex-col gap-4 justify-center">
           {/* Add sidebar content here */}
-          <div className="w-full h-2/3 border border-primary/30 rounded-xl shadow-lg bg-white"></div>
+          <div className="w-full h-2/3 flex flex-col gap-3 overflow-auto border border-primary/30 rounded-xl shadow-lg bg-white p-2 ">
+            {history.map((h) => (
+              <button
+                onClick={() =>{
+                  router.push(`/${h.chatId}`);
+                }}
+                key={h._id}
+                className="flex bg-green-400/10 p-4 border items-center border-green-400 rounded-lg gap-4">
+                <div className="p-2 bg-white rounded-full items-center">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                </div>
+                <p>"{h.title}"</p>
+              </button>
+            ))}
+          </div>
           <div className="flex flex-col rounded-xl w-full  h-fit bg-green-400/20 p-4 border border-green-400 shadow-lg">
             {/* Header */}
             <div className="flex items-center justify-between">

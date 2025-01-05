@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../model/user.model");
 const Billing = require("../model/billing.model");
+const Chat = require("../model/chat.model");
 
 const router = express.Router();
 
@@ -86,6 +87,25 @@ router.get("/getDetails/:id", async (req, res) => {
       status: "success",
       message: "Billing details retrieved successfully",
       data: billing,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+});
+
+router.get("/getToken/:id", async (req, res) => {
+  try {
+    const chatDoc = await Chat.find({ userId: req.params.id });
+
+    const tokens = chatDoc.map((chat) => chat.token);
+    const totalToken = tokens.reduce((acc, curr) => acc + curr, 0);
+    return res.status(200).json({
+      status: "success",
+      message: "Token retrieved successfully",
+      data: totalToken,
     });
   } catch (error) {
     res.status(400).json({

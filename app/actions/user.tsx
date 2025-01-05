@@ -71,3 +71,21 @@ export const createUser = async ({
     throw new Error(error.message);
   }
 };
+
+export const getTotalToken = async ({ userId }: { userId: string }) => {
+  try {
+    const response = await fetch(`http://localhost:8000/billing/getToken/${userId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const responseJson = await response.json();
+    if (responseJson.status === "error") {
+      throw new Error(responseJson.message);
+    }
+    return responseJson;
+  } catch (error: any) {
+    return error.message;
+  }
+};

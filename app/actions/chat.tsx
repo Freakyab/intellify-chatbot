@@ -73,7 +73,7 @@ export const getChat = async ({
 export const getHistory = async ({ userId }: { userId: string }) => {
   try {
     const response = await fetch(
-      `http://localhost:8000/chat/history/${userId}`,
+      `http://localhost:8000/chat/list/${userId}`,
       {
         method: "GET",
         headers: {
@@ -102,7 +102,6 @@ export const generateTitle = async ({
   messages : Message[],
 }) => {
   try {
-    console.log("messages");
     const response = await fetch("/api/summary", {
       method: "POST",
       headers: {
@@ -113,6 +112,7 @@ export const generateTitle = async ({
       }),
     });
     const responseJson = await response.json();
+    console.log("responseJson", responseJson);
     if (responseJson.status === "error") {
       console.log("responseJson", responseJson);
       throw new Error(responseJson.message);
@@ -121,6 +121,42 @@ export const generateTitle = async ({
       throw new Error("Title not generated");
     }
     return responseJson.reply;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export const saveTitle = async ({
+  title,
+  chatId,
+  userId,
+  method
+}: {
+  title: string;
+  chatId: string;
+  userId: string;
+  method: string;
+}) => {
+  try {
+    const response = await fetch("http://localhost:8000/chat/title", {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title,
+        chatId,
+        userId
+      }),
+    });
+    const responseJson = await response.json();
+    if (responseJson.status === "error") {
+      throw new Error(responseJson.message);
+    }
+    if (responseJson.data === null) {
+      throw new Error("Title not saved");
+    }
+    return responseJson;
   } catch (error: any) {
     throw new Error(error.message);
   }
