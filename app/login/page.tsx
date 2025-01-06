@@ -1,13 +1,15 @@
 "use client";
 import React, { useEffect, useState } from "react";
 
-
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { getSession } from "@/lib/session";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 function Page() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "test@gmail.com",
     password: "test@22",
@@ -15,12 +17,21 @@ function Page() {
   });
 
   const router = useRouter();
+  const { toast } = useToast();
   const handleSignup = () => {
     setIsLogin(!isLogin);
   };
 
+  const ObjectId = (
+    m = Math,
+    d = Date,
+    h = 16,
+    s = (s: number) => m.floor(s).toString(h)
+  ) => s(d.now() / 1000) + " ".repeat(h).replace(/./g, () => s(m.random() * h));
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setIsLoading(true);
     const { email, password, name } = formData;
 
     await signIn("credentials", {
@@ -32,43 +43,29 @@ function Page() {
     }).then((response) => {
       const error = response?.error;
       if (error) {
-        console.error("Failed to log in", error);
-        
+        toast({ title: "Error", description: error });
       } else {
-
-        // router.push("/");
+        router.push(`/${ObjectId()}`);
+        // router.push(`/${new ObjectId().toHexString()}`);
       }
     });
     setFormData({ email: "", password: "", name: "" });
+    setIsLoading(false);
   };
 
   useEffect(() => {
     const fetchSession = async () => {
       const session = await getSession();
+
       if (session) {
-        console.log("Session found");
-        // router.push("/");
+        router.push(`/${ObjectId()}`);
       }
     };
     fetchSession();
   }, []);
 
   return (
-    <div className="flex flex-col p-4">
-      {isLogin && (
-        <div className="border-[#E76F51] bg-[rgb(231,111,81,0.7)] p-3 m-3 text-white rounded-md">
-          <h1>
-            Use username :
-            <span className="px-2 italic text-black font-bold">
-              test@gmail.com
-            </span>
-            and password :
-            <span className="px-2 italic text-black font-bold">test@22</span>
-            for testing
-          </h1>
-        </div>
-      )}
-
+    <div className="flex flex-col p-4 h-screen justify-center">
       <form
         onSubmit={handleSubmit}
         className="flex flex-col items-center gap-4 space-y-3">
@@ -146,7 +143,9 @@ function Page() {
           </div>
           <button
             type="submit"
+            disabled={isLoading}
             className="my-4 flex h-10 w-full flex-row items-center justify-center rounded-lg bg-zinc-900 p-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800">
+            {isLoading && <Loader2 className="animate-spin ml-2" />}
             <span className="text-sm">{isLogin ? "Log in" : "Sign up"}</span>
           </button>
           <button>

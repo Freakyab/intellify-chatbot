@@ -74,11 +74,52 @@ export const createUser = async ({
 
 export const getTotalToken = async ({ userId }: { userId: string }) => {
   try {
-    const response = await fetch(`http://localhost:8000/billing/getToken/${userId}`, {
-      method: "GET",
+    const response = await fetch(
+      `http://localhost:8000/billing/getDetails/${userId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const responseJson = await response.json();
+    if (responseJson.status === "error") {
+      throw new Error(responseJson.message);
+    }
+    return responseJson;
+  } catch (error: any) {
+    return error.message;
+  }
+};
+
+export const addToken = async ({
+  userId,
+  modelType,
+  totalToken,
+  limitation,
+  apiKey,
+}: {
+  userId: string;
+  modelType: string;
+  totalToken: number;
+  limitation: number;
+  apiKey: string;
+
+}) => {
+  try {
+    const response = await fetch("http://localhost:8000/billing/addOrUpdateDoc", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        userId,
+        modelType,
+        totalToken,
+        limitation,
+        apiKey,
+      }),
     });
     const responseJson = await response.json();
     if (responseJson.status === "error") {

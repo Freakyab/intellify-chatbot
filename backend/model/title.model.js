@@ -10,11 +10,12 @@ const titleSchema = new Schema(
       default: "untitled",
     },
     userId: {
-      type: String,
+      type : Schema.Types.ObjectId,
+      ref : "User",
       required: true,
     },
     chatId: {
-      type: String,
+      type: Schema.Types.ObjectId,
       unique: true,
       required: true,
     },

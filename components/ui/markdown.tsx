@@ -31,7 +31,7 @@ function Markdown({
         // Render sanitized Markdown content when typing is complete
         <div
           dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-          className="mt-4"></div>
+          className=""></div>
       ) : (
         // Render the Typewriter effect until complete
         <TypewriterEffect

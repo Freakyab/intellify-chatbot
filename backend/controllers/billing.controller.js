@@ -80,6 +80,66 @@ router.put("/updateLimit/:id", async (req, res) => {
   }
 });
 
+router.post("/addOrUpdateDoc", async (req, res) => {
+  try {
+    const { modelType, totalToken, limitation, apiKey, userId } = req.body;
+    if (!userId) {
+      throw new Error("userId, docId, and content are required");
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({
+        status: "error",
+        message: "User does not exist",
+      });
+    }
+
+    // Check if document exists
+    let doc = await Billing.findOne({ userId });
+    if (doc) {
+      // Update document
+      const updatedDoc = {
+        modelType,
+        totalToken,
+        limitation,
+        apiKey,
+        userId,
+      };
+      doc = await Billing.findByIdAndUpdate(doc._id, updatedDoc, { new: true });
+
+      await doc.save();
+
+      return res.status(200).json({
+        status: "success",
+        message: "Document updated successfully",
+        data: doc,
+      });
+    } else {
+      // Create new document
+      doc = new Billing({
+        userId,
+        modelType,
+        totalToken,
+        limitation,
+        apiKey,
+      });
+      await doc.save();
+      return res.status(201).json({
+        status: "success",
+        message: "Document added successfully",
+        data: doc,
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+});
+
 router.get("/getDetails/:id", async (req, res) => {
   try {
     const billing = await Billing.find({ userId: req.params.id });
@@ -96,23 +156,6 @@ router.get("/getDetails/:id", async (req, res) => {
   }
 });
 
-router.get("/getToken/:id", async (req, res) => {
-  try {
-    const chatDoc = await Chat.find({ userId: req.params.id });
 
-    const tokens = chatDoc.map((chat) => chat.token);
-    const totalToken = tokens.reduce((acc, curr) => acc + curr, 0);
-    return res.status(200).json({
-      status: "success",
-      message: "Token retrieved successfully",
-      data: totalToken,
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: "error",
-      message: error.message,
-    });
-  }
-});
 
 module.exports = router;

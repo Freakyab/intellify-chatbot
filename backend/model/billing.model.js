@@ -6,23 +6,25 @@ const billingSchema = new Schema(
   {
     modelType: {
       type: String,
-      required: true,
+      required: false,
+      default: "free",
     },
     totalToken: {
-      type: String,
+      type: Number,
       required: true,
+      default: 0,
     },
     limitation: {
-      type: String,
+      type: Number,
       required: false,
+      default: 20,
     },
     apiKey: {
       type: String,
-      required: true,
+      required: false,
     },
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
       required: true,
     },
   },

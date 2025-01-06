@@ -1,26 +1,15 @@
 "use client";
 import { Input } from "@/components/ui/input";
-import {
-  BookPlus,
-  Bot,
-  ChartNoAxesCombined,
-  Loader2,
-  MessageCircle,
-  Send,
-  User2,
-} from "lucide-react";
+import { BookPlus, Bot, Loader2, Send, User2 } from "lucide-react";
 import React, { useCallback, useEffect } from "react";
 import { useChat } from "ai/react";
 import { getSession } from "@/lib/session";
-import {
-  generateTitle,
-  getChat,
-  getHistory,
-  saveTitle,
-} from "@/app/actions/chat";
+import { generateTitle, getChat, saveTitle } from "@/app/actions/chat";
 import Markdown from "@/components/ui/markdown";
-import { useRouter } from "next/navigation";
-import { getTotalToken } from "@/app/actions/user";
+import { addToken } from "@/app/actions/user";
+import { useToast } from "@/hooks/use-toast";
+import Sidenav from "@/components/sidenav";
+import { UseModelSettings } from "@/components/modelSettingContext";
 
 type SessionDetails = {
   user: {
@@ -37,17 +26,11 @@ function Page({
     id: string;
   };
 }) {
+  const { toast } = useToast();
   const [token, setToken] = React.useState<number>(0);
   const [session, setSession] = React.useState<SessionDetails | null>(null);
   const [initialMessages, setInitialMessages] = React.useState<any[]>([]);
-  const [history, setHistory] = React.useState<
-    {
-      _id: string;
-      title: string;
-      chatId: string;
-      userId: string;
-    }[]
-  >([]);
+  const { formData } = UseModelSettings();
   const {
     messages,
     input,
@@ -60,17 +43,18 @@ function Page({
       chatId: params.id,
       userId: session?.user.id,
       timeStamp: new Date().toISOString(),
+      formData: formData,
     },
     api: "/api/chat/",
     streamProtocol: "text",
     initialMessages: initialMessages,
-    onFinish(message) {
+    onFinish: async (message) => {
       const data = JSON.parse(message.content);
       const usage = data.usage;
       const text = data.text;
       const error = data.error;
       if (error) {
-        console.error(error);
+        toast({ title: "Error", description: error });
         return;
       }
       setMessages([
@@ -86,20 +70,24 @@ function Page({
           role: "assistant",
         },
       ]);
-      setToken(token + usage.completionTokens);
+      if (session?.user.id) {
+        await addToken({
+          userId: session?.user.id,
+          modelType: "gemini api",
+          totalToken: token + usage.totalTokens,
+          limitation: 20,
+          apiKey: "123456",
+        });
+      }
+
+      setToken(token + usage.totalTokens);
     },
     onError(error) {
-      console.error(error);
+      toast({ title: "Error", description: error.message });
     },
   });
-  const router = useRouter();
   const [chatContainerRef, setChatContainerRef] =
     React.useState<HTMLDivElement | null>(null);
-
-  const totalBill = useCallback(() => {
-    const costPerToken = 0.000000075;
-    return (token * costPerToken).toFixed(2);
-  }, [token]);
 
   const fetchSessionAndChat = useCallback(async () => {
     try {
@@ -111,68 +99,47 @@ function Page({
           userId: session.user.id,
         });
 
-        const allHistory = await getHistory({ userId: session.user.id });
         if (response.data) {
           setInitialMessages(response.data);
           setToken(response.totalToken);
         } else {
           setInitialMessages([]);
         }
-
-        if (allHistory.data) {
-          setHistory(allHistory.data);
-        }
-
-        const tokenResponse = await getTotalToken({ userId: session.user.id });
-        console.log(tokenResponse);
-        if (tokenResponse.status === "error") {
-          throw new Error(tokenResponse.message);
-        } else {
-          setToken(tokenResponse.data);
-        }
       }
     } catch (error: any) {
       console.error("Error fetching session or chat:", error.message);
+      toast({ title: "Error", description: error.message });
     }
   }, [params.id, setSession, setInitialMessages, setMessages]);
-//  }, [params.id, ])  ;
-
-
-  const getWidth = useCallback(() => {
-    const width = (token / 50) * 0.001 * 100;
-    if (width > 100) return 100;
-    return width;
-  }, [token]);
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isLoading && !input) return;
     handleSubmit();
     try {
-      console.log(messages.length);
       if (messages.length == 0 || messages.length % 4 == 0) {
+        // if (messages.length > 0) {
         const response = await generateTitle({ messages });
         if (response.status === "error") {
           throw new Error(response.message);
         } else {
           if (response && session?.user.id) {
+            console.log(response, "response");
             const titleSavingResponse = await saveTitle({
-              title: response,
+              title: response as string,
               chatId: params.id,
               userId: session?.user.id,
-              method: messages.length == 0 ? "POST" : "PUT",
             });
 
             if (titleSavingResponse.status === "error") {
               throw new Error(titleSavingResponse.message);
-            } else {
-              console.log("Title saved successfully");
             }
           }
         }
       }
     } catch (error) {
       console.error(error);
+      toast({ title: "Error", description: error as string });
     }
   };
 
@@ -274,80 +241,12 @@ function Page({
           </form>
         </div>
 
-        {/* Sidebar */}
-        <div className="w-1/4 flex flex-col gap-4 justify-center">
-          {/* Add sidebar content here */}
-          <div className="w-full h-2/3 flex flex-col gap-3 overflow-auto border border-primary/30 rounded-xl shadow-lg bg-white p-2 ">
-            {history.map((h) => (
-              <button
-                onClick={() =>{
-                  router.push(`/${h.chatId}`);
-                }}
-                key={h._id}
-                className="flex bg-green-400/10 p-4 border items-center border-green-400 rounded-lg gap-4">
-                <div className="p-2 bg-white rounded-full items-center">
-                  <MessageCircle className="h-5 w-5 text-primary" />
-                </div>
-                <p>"{h.title}"</p>
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-col rounded-xl w-full  h-fit bg-green-400/20 p-4 border border-green-400 shadow-lg">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 text-primary rounded-full bg-white">
-                  <ChartNoAxesCombined className="h-5 w-5" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  User Details
-                </h2>
-              </div>
-              <span className="px-3 py-1 text-sm font-medium text-primary bg-white rounded-full">
-                Gemini API
-              </span>
-            </div>
-
-            {/* Cost Section */}
-            <div className="p-2">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">API Cost</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-semibold text-gray-900">
-                    ${totalBill()}
-                  </span>
-                  <span className="text-sm text-gray-500">/ $50 limit</span>
-                </div>
-              </div>
-              {/* Progress bar */}
-              <div className="h-2 bg-gray-200 rounded-full">
-                <div
-                  className="h-full bg-primary rounded-full"
-                  style={{ width: `${getWidth()}%` }}
-                />
-              </div>
-
-              {/* Token Usage */}
-              <div className="py-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Tokens Used</span>
-                  <div className="flex items-baseline gap-1">
-                    <span
-                      className="text-sm font-semibold text-gray-900 capitalize
-                    ">
-                      {token.toLocaleString("en-US", {
-                        notation: "compact",
-                        compactDisplay: "long",
-                      })}
-                    </span>
-
-                    <span className="text-sm text-gray-500">tokens</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Sidenav
+          messages={messages}
+          chatId={params.id}
+          token={token}
+          setToken={setToken}
+        />
       </div>
     </div>
   );

@@ -143,6 +143,29 @@ router.post("/title", async (req, res) => {
       });
     }
 
+    const checkTitle = await Title.findOne({ userId: userId, chatId: chatId });
+
+    if (checkTitle) {
+      const newTitle = await Title.findOneAndUpdate(
+        { userId: userId, chatId: chatId },
+        { title: title },
+        { new: true }
+      );
+
+      if (!newTitle) {
+        return res.status(400).json({
+          status: "error",
+          message: "Title not updated",
+        });
+      }
+
+      return res.status(200).json({
+        status: "success",
+        message: "Title updated successfully",
+        data: newTitle,
+      });
+    }
+
     const titleData = new Title({
       title,
       userId,
@@ -171,45 +194,5 @@ router.post("/title", async (req, res) => {
   }
 }); 
 
-router.put("/title", async (req, res) => {
-  try {
-    const { title, chatId, userId } = req.body;
-    console.log(title, chatId, userId);
-    if (!title || !chatId || !userId) {
-      return res.status(400).json({
-        status: "error",
-        message: !title
-          ? "Title is required"
-          : !chatId
-          ? "ChatId is required"
-          : "UserId is required",
-      });
-    }
-
-    const titleData = await Title.findOneAndUpdate(
-      { userId: userId, chatId: chatId },
-      { title: title },
-      { new: true }
-    );
-
-    if (!titleData) {
-      return res.status(400).json({
-        status: "error",
-        message: "Title not updated",
-      });
-    }
-
-    res.status(200).json({
-      status: "success",
-      message: "Title updated successfully",
-      data: titleData,
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: "error",
-      message: error.message,
-    });
-  }
-});
 
 module.exports = router;

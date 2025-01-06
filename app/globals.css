@@ -94,3 +94,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+.temporary-bounce {
+  -webkit-animation-iteration-count: 10;
+  animation-iteration-count: 10;
+}

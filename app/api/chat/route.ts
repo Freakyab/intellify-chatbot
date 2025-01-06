@@ -1,4 +1,5 @@
 import { saveChat } from '@/app/actions/chat';
+import { ModelSettingsType } from '@/app/types/types';
 import { google } from '@ai-sdk/google';
 import { generateText, Message } from 'ai';
 
@@ -10,15 +11,29 @@ type CoreMessage = {
 
 export async function POST(req: Request) {
 
-    const { messages, chatId, userId, timeStamp }: {
+    const { messages, chatId, userId, timeStamp, formData }: {
         messages: Message[],
         chatId: string,
         userId: string,
         timeStamp: string,
+        formData: ModelSettingsType
     } =
         await req.json();
 
     let saveFailed = false;
+    const useUserSettings = formData.user;
+    const DefaultSettings = {
+        messageLength: useUserSettings ? formData.messageLength : 10,
+        apiKey: useUserSettings ? formData.apiKey : "",
+        systemMessage: useUserSettings ? formData.systemMessage : ` - you are an AI assistant
+            - you are assisting a user
+            - you provide maximum information to the user
+            - you are polite and helpful
+            - use minimum tokens to generate a response`,
+        tokenLimit: useUserSettings ? formData.tokenLimit : 500,
+        apiType: useUserSettings ? formData.apiType : "gemini"
+    }
+
 
     // Convert messages to the format expected by Gemini get last 10 messages
     const convertedMessages: CoreMessage[] = messages
@@ -29,7 +44,7 @@ export async function POST(req: Request) {
                 : message.role,
             content: message.content
         }))
-        .slice(-10)
+        .slice(-DefaultSettings.messageLength)
         .filter((message): message is CoreMessage =>
             message.role === 'user' ||
             message.role === 'assistant' ||
@@ -50,14 +65,8 @@ export async function POST(req: Request) {
             temperature: 1,
             topP: 0.95,
             topK: 40,
-            maxTokens: 1000,
-            system: `
-            - you are an AI assistant
-            - you are assisting a user
-            - you provide maximum information to the user
-            - you are polite and helpful
-            - use minimum tokens to generate a response
-            `,
+            maxTokens: DefaultSettings.tokenLimit,
+            system: DefaultSettings.systemMessage,
 
         });
 
@@ -81,7 +90,6 @@ export async function POST(req: Request) {
         ];
 
         const response = await saveChat({ backendData });
-        console.log('response', response.data);
         if (response.status === 'error') {
             saveFailed = true;
             throw new Error(response.message);
@@ -96,7 +104,7 @@ export async function POST(req: Request) {
                 start(controller) {
                     controller.enqueue(encoder.encode(JSON.stringify({
                         text: result.text,
-                        id : response._id,
+                        id: response._id,
                         usage: result.usage
                     })));
                     controller.close();

@@ -18,3 +18,13 @@ export type User = {
   _id: string,
   picture?: string,
 }
+
+export type ModelSettingsType = {
+  moneyLimit : number;
+  user: boolean;
+  apiType: string;
+  tokenLimit: number;
+  apiKey: string;
+  systemMessage: string;
+  messageLength: number;
+}
