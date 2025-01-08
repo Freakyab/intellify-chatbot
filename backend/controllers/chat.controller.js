@@ -73,10 +73,10 @@ router.post("/prev/:chatId", async (req, res) => {
         content: chat.content,
       };
     });
-    // total token count
-    const totalToken = sortedChat.reduce((acc, chat) => {
-      return acc + chat.token;
-    }, 0);
+    // // total token count
+    // const totalToken = sortedChat.reduce((acc, chat) => {
+    //   return acc + chat.token;
+    // }, 0);
 
     if (!chat) {
       return res.status(400).json({
@@ -88,7 +88,7 @@ router.post("/prev/:chatId", async (req, res) => {
       status: "success",
       message: "Chat fetched successfully",
       data: filterChat,
-      totalToken,
+      // totalToken,
     });
   } catch (error) {
     res.status(400).json({

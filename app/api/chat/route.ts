@@ -1,6 +1,8 @@
 import { saveChat } from '@/app/actions/chat';
 import { ModelSettingsType } from '@/app/types/types';
-import { google } from '@ai-sdk/google';
+// import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+
 import { generateText, Message } from 'ai';
 
 // Define the expected message types
@@ -8,6 +10,8 @@ type CoreMessage = {
     role: 'user' | 'assistant' | 'system';
     content: string;
 }
+
+
 
 export async function POST(req: Request) {
 
@@ -31,7 +35,8 @@ export async function POST(req: Request) {
             - you are polite and helpful
             - use minimum tokens to generate a response`,
         tokenLimit: useUserSettings ? formData.tokenLimit : 500,
-        apiType: useUserSettings ? formData.apiType : "gemini"
+        apiType: useUserSettings ? formData.apiType : "gemini",
+        freeTokenLimit: formData.freeTokenLimit || 0
     }
 
 
@@ -53,12 +58,26 @@ export async function POST(req: Request) {
 
     if (userId.length !== 24 || chatId.length !== 24) {
         return new Response(
-            JSON.stringify({ error: 'Invalid user or chat ID' }),
+            JSON.stringify('Invalid user or chat ID'),
             { status: 400 }
         );
     }
 
+    const google = createGoogleGenerativeAI({
+        apiKey: useUserSettings ? DefaultSettings.apiKey : process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    });
+
     try {
+
+        if (chatId == '222222222222222222222222' && userId == '222222222222222222222222') {
+            const isLimitHit = DefaultSettings.freeTokenLimit >= 10_000;
+            if (isLimitHit) {
+                return new Response(
+                    JSON.stringify('You have reached the maximum number of messages'),
+                    { status: 400 }
+                );
+            }
+        }
         const result = await generateText({
             model: google('models/gemini-1.5-flash-latest'),
             messages: convertedMessages,
@@ -67,7 +86,6 @@ export async function POST(req: Request) {
             topK: 40,
             maxTokens: DefaultSettings.tokenLimit,
             system: DefaultSettings.systemMessage,
-
         });
 
         const backendData = [
@@ -120,15 +138,21 @@ export async function POST(req: Request) {
 
         } else {
             return new Response(
-                JSON.stringify({ error: 'Failed to save chat, response generation aborted' }),
+                JSON.stringify('Failed to save chat, response generation aborted'),
                 { status: 500 }
             );
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Streaming error:', error);
+        if (error.data.error.message) {
+            return new Response(
+                JSON.stringify(error.data.error.message),
+                { status: 500 }
+            );
+        }
         return new Response(
-            JSON.stringify({ error: 'Failed to process chat request' }),
+            JSON.stringify(error.messages),
             { status: 500 }
         );
     }

@@ -97,14 +97,14 @@ router.post("/addOrUpdateDoc", async (req, res) => {
     }
 
     // Check if document exists
-    let doc = await Billing.findOne({ userId });
+    let doc = await Billing.findOne({ userId, apiKey });
     if (doc) {
       // Update document
       const updatedDoc = {
         modelType,
         totalToken,
         limitation,
-        apiKey,
+        apiKey: apiKey === "" ? "Free" : apiKey,
         userId,
       };
       doc = await Billing.findByIdAndUpdate(doc._id, updatedDoc, { new: true });
@@ -155,7 +155,5 @@ router.get("/getDetails/:id", async (req, res) => {
     });
   }
 });
-
-
 
 module.exports = router;

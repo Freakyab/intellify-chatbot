@@ -22,6 +22,7 @@ const billingSchema = new Schema(
     apiKey: {
       type: String,
       required: false,
+      default: "Free",
     },
     userId: {
       type: Schema.Types.ObjectId,

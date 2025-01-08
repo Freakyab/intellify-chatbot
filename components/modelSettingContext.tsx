@@ -1,6 +1,6 @@
 "use client";
 import { ModelSettingsType } from "@/app/types/types";
-import React, { Children, ReactNode } from "react";
+import React, {  ReactNode } from "react";
 
 export const ModelContext = React.createContext<{
   formData: ModelSettingsType;
@@ -8,9 +8,9 @@ export const ModelContext = React.createContext<{
 }>({
   formData: {
     user: false,
-    apiType: "",
+    apiType: "Free",
     tokenLimit: 500,
-    apiKey: "",
+    apiKey: "Free",
     systemMessage: "",
     moneyLimit : 10,
     messageLength: 10,
@@ -19,15 +19,22 @@ export const ModelContext = React.createContext<{
 });
 
 export const ModelProvider = ({ children }: { children: ReactNode }) => {
-  const [formData, SetFormData] = React.useState<ModelSettingsType>({
-    user: false,
-    apiType: "",
-    tokenLimit: 500,
-    apiKey: "",
-    systemMessage: "",
-    messageLength: 10,
-    moneyLimit : 10,
+  const [formData, SetFormData] = React.useState<ModelSettingsType>(() => {
+    const saved = localStorage.getItem("formData");
+    return saved ? JSON.parse(saved) : {
+      user: false,
+      apiType: "Free",
+      tokenLimit: 500,
+      apiKey: "Free",
+      systemMessage: "",
+      messageLength: 10,
+      moneyLimit : 10,
+    };
   });
+
+  React.useEffect(() => {
+    localStorage.setItem("formData", JSON.stringify(formData));
+  }, [formData]);
 
   return (
     <ModelContext.Provider

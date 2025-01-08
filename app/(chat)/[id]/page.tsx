@@ -76,7 +76,7 @@ function Page({
           modelType: "gemini api",
           totalToken: token + usage.totalTokens,
           limitation: 20,
-          apiKey: "123456",
+          apiKey: formData.apiKey || "Free",
         });
       }
 
@@ -101,7 +101,7 @@ function Page({
 
         if (response.data) {
           setInitialMessages(response.data);
-          setToken(response.totalToken);
+          // setToken(response.totalToken);
         } else {
           setInitialMessages([]);
         }
@@ -165,11 +165,11 @@ function Page({
     <div className="flex h-screen w-screen bg-gradient-to-br from-primary/5 to-primary/10 p-6">
       <div className="flex w-full gap-6">
         {/* Main Chat Area */}
-        <div className="flex w-3/4 flex-col gap-4">
+        <div className="flex w-3/4 flex-col gap-4 h-full">
           {/* Messages Container */}
           <div
             ref={setChatContainerRef}
-            className="flex h-[80vh] flex-col gap-6 overflow-auto rounded-xl bg-white p-6 shadow-lg">
+            className="flex h-[80vh] flex-col gap-6 overflow-auto bg-white p-6 shadow-lg rounded-xl">
             {messages.map((m, index) => (
               <div key={m.id}>
                 {m.role == "user" ? (

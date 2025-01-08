@@ -27,4 +27,5 @@ export type ModelSettingsType = {
   apiKey: string;
   systemMessage: string;
   messageLength: number;
+  freeTokenLimit?: number;
 }

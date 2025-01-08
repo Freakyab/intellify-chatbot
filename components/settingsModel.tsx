@@ -22,10 +22,12 @@ import { UseModelSettings } from "./modelSettingContext";
 
 function SettingsModel({
   isOpen,
+  setToken,
   onClose,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  setToken: (value: number) => void;
 }) {
   const { formData, setFormData } = UseModelSettings();
   return (
@@ -155,12 +157,41 @@ function SettingsModel({
         </div>
 
         <DialogFooter>
+          <Button
+            onClick={() => {
+              try {
+                confirm("Are you sure you want to reset all settings?");
+                setFormData({
+                  user: false,
+                  apiType: "Free",
+                  tokenLimit: 500,
+                  apiKey: "Free",
+                  systemMessage: "",
+                  messageLength: 10,
+                  moneyLimit: 10,
+                });
+                onClose();
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            className="mr-auto"
+            variant="destructive">
+            Reset
+          </Button>
           <DialogClose asChild>
             <Button variant="outline">Cancel</Button>
           </DialogClose>
           <Button
             onClick={() => {
+              console.log(formData);
+              // if (formData.apiType.length < 42 ) {
+              //   alert("Please select an API type");
+              //   return;
+              // }
               setFormData({ ...formData, user: true });
+              setToken(0);
+              onClose();
             }}>
             Save Changes
           </Button>
