@@ -14,7 +14,6 @@ function AllTutorial({
   console.log(action, "action");
   return (
     <div>
-      {action === 0 && null}
       {action === 1 && <Tutorial1 setAction={setAction} />}
       {action === 2 && <Tutorial2 setAction={setAction} />}
       {action === 3 && <Tutorial3 setAction={setAction} />}

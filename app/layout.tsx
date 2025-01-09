@@ -4,7 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Navbar from "@/components/navbar";
 import { ModelProvider } from "@/components/modelSettingContext";
-import { ScreenWidthProvider } from "@/hooks/use-screen-width";
+// import { ScreenWidthProvider } from "@/hooks/use-screen-width";
+import ResponsiveComponent from "@/hooks/use-screen-width";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,13 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ScreenWidthProvider>
-          <ModelProvider>
-            <Navbar />
+        {/* <ResponsiveComponent> */}
+          {/* <ModelProvider> */}
+            {/* <Navbar /> */}
             {children}
             <Toaster />
-          </ModelProvider>
-        </ScreenWidthProvider>
+          {/* </ModelProvider> */}
+        {/* </ResponsiveComponent> */}
       </body>
     </html>
   );

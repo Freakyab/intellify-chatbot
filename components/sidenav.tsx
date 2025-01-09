@@ -104,13 +104,13 @@ function Sidenav({
         <p className="text-2xl tracking-widest py-4 px-2">Chat History</p>
         <div className="overflow-auto w-full flex flex-col gap-3 max-h-[50vh]">
           {history.map((h) => (
-            <button
+            <div
               onClick={(e) => {
                 e.preventDefault();
                 router.push(`/${h.chatId}`);
               }}
               key={h._id}
-              className="flex relative group bg-green-400/10 p-4 border items-center border-green-400 rounded-lg gap-4">
+              className="flex relative group bg-green-400/10 p-4 border items-center border-green-400 rounded-lg gap-4 cursor-pointer">
               <div className="p-2 bg-white rounded-full items-center">
                 <MessageCircle className="h-5 w-5 text-primary" />
               </div>
@@ -150,7 +150,7 @@ function Sidenav({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            </button>
+            </div>
           ))}
         </div>
       </div>

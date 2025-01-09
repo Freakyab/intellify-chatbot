@@ -1,34 +1,33 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-// Define the laptop breakpoint (you can adjust this value as needed)
 const LAPTOP_BREAKPOINT = 1024;
 
 const ScreenWidthContext = createContext<{ isVisible: boolean }>({ isVisible: true });
 
 const useScreenWidth = () => {
-    const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+    const [screenWidth, setScreenWidth] = useState(0); // Default to 0, safe for SSR
     const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
         const handleResize = () => {
-            setScreenWidth(window.innerWidth);
+            setScreenWidth(window.innerWidth); // Access window safely inside useEffect
         };
 
-        window.addEventListener("resize", handleResize);
-        handleResize(); // Initial call to set the screen width
+        if (typeof window !== "undefined") {
+            handleResize(); // Initial call to set the screen width
+            window.addEventListener("resize", handleResize);
+        }
 
         return () => {
-            window.removeEventListener("resize", handleResize);
+            if (typeof window !== "undefined") {
+                window.removeEventListener("resize", handleResize);
+            }
         };
     }, []);
 
     useEffect(() => {
-        if (screenWidth < LAPTOP_BREAKPOINT) {
-            setIsVisible(false);
-        } else {
-            setIsVisible(true);
-        }
+        setIsVisible(screenWidth >= LAPTOP_BREAKPOINT);
     }, [screenWidth]);
 
     return { isVisible };
@@ -39,13 +38,13 @@ export const ScreenWidthProvider = ({ children }: { children: React.ReactNode })
 
     return (
         <ScreenWidthContext.Provider value={screenWidthState}>
-            {screenWidthState.isVisible ? (
-                <>{children}</>
-            ) : (
+            {/* {screenWidthState.isVisible ? (
+                <React.Fragment>{children}</React.Fragment>
+            ) : ( */}
                 <div className="flex h-screen items-center justify-center bg-gray-50">
                     Please use a laptop or desktop to view this page
                 </div>
-            )}
+            {/* )} */}
         </ScreenWidthContext.Provider>
     );
 };

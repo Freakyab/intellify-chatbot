@@ -19,6 +19,8 @@ export const ModelContext = React.createContext<{
 });
 
 export const ModelProvider = ({ children }: { children: ReactNode }) => {
+  if(typeof localStorage === "undefined") return null;
+
   const [formData, SetFormData] = React.useState<ModelSettingsType>(() => {
     const saved = localStorage.getItem("formData");
     return saved ? JSON.parse(saved) : {

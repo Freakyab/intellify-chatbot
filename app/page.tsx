@@ -76,7 +76,8 @@ function Home() {
         setToken((prev) => prev + usage.totalTokens);
 
         // localStorage.setItem("messages", JSON.stringify([]));
-        localStorage.setItem("messages", JSON.stringify(updatedMessages));
+        if (typeof localStorage !== 'undefined')
+          localStorage.setItem("messages", JSON.stringify(updatedMessages));
       } catch (err) {
         toast({ title: "Error", description: "Failed to process response." });
       }
@@ -105,45 +106,45 @@ function Home() {
   }, [messages]);
 
   React.useEffect(() => {
-    const localMessages = localStorage.getItem("messages");
-    const parsedMessages = localMessages
-      ? (JSON.parse(localMessages) as Message[])
-      : [];
+    if (typeof localStorage !== 'undefined') {
+      const localMessages = localStorage.getItem("messages");
+      const parsedMessages = localMessages
+        ? (JSON.parse(localMessages) as Message[])
+        : [];
 
-    const today = new Date();
-    const todaysMessages = parsedMessages.filter((m) => {
-      const messageDate = new Date(m.id);
-      return (
-        today.getDate() === messageDate.getDate() &&
-        today.getMonth() === messageDate.getMonth() &&
-        today.getFullYear() === messageDate.getFullYear()
-      );
-    });
+      const today = new Date();
+      const todaysMessages = parsedMessages.filter((m) => {
+        const messageDate = new Date(m.id);
+        return (
+          today.getDate() === messageDate.getDate() &&
+          today.getMonth() === messageDate.getMonth() &&
+          today.getFullYear() === messageDate.getFullYear()
+        );
+      });
 
-    const todayTokenUsage = todaysMessages.reduce((acc, curr) => {
-      const token =
-        curr.data && typeof curr.data === "object" && "token" in curr.data
-          ? curr.data.token
-          : 0;
-      return acc + (typeof token === "number" ? token : 0);
-    }, 0);
+      const todayTokenUsage = todaysMessages.reduce((acc, curr) => {
+        const token =
+          curr.data && typeof curr.data === "object" && "token" in curr.data
+            ? curr.data.token
+            : 0;
+        return acc + (typeof token === "number" ? token : 0);
+      }, 0);
 
-    setToken(todayTokenUsage);
-    setInitialMessages(parsedMessages);
-    if (parsedMessages.length == 0) {
-      setActions(1);
-    }
-    if (todayTokenUsage >= 10_000) {
-      setActions(4);
+      setToken(todayTokenUsage);
+      setInitialMessages(parsedMessages);
+      if (parsedMessages.length == 0) {
+        setActions(1);
+      }
+      if (todayTokenUsage >= 10_000) {
+        setActions(4);
+      }
     }
   }, []);
   return (
     <div className="flex h-screen w-screen bg-gradient-to-br from-primary/5 to-primary/10 p-6">
       {<AllTutorial action={actions} setAction={setActions} />}
       <div className="flex w-full gap-6 h-full">
-        {/* Main Chat Area */}
         <div className="flex w-3/4 flex-col gap-4 ">
-          {/* Messages Container */}
           <div
             ref={setChatContainerRef}
             className={`flex h-[80vh] flex-col gap-6 overflow-auto bg-white p-6 shadow-lg rounded-x
@@ -154,19 +155,19 @@ function Home() {
                   <Terminal className="h-4 w-4" />
                   <AlertTitle>Welcome to the AI Chat Interface</AlertTitle>
                   <AlertDescription>
-                    <p>
+                    <div>
                       -You have daily
                       <span className="font-semibold text-primary mx-1">
                         10,000
                       </span>
                       tokens to interact with the AI. Use them wisely!
-                    </p>
-                    <p>
+                    </div>
+                    <div>
                       -Login to save your chat history and access to
                       <span className="font-semibold text-primary mx-1">
                         Settings.
                       </span>
-                    </p>
+                    </div>
                   </AlertDescription>
                 </Alert>
               </div>
@@ -210,7 +211,6 @@ function Home() {
             ))}
           </div>
 
-          {/* Input Area */}
           <form
             className="rounded-xl bg-white shadow-lg"
             onSubmit={handleFormSubmit}>
