@@ -60,7 +60,7 @@ function Page({
       setMessages([
         ...messages,
         {
-          id: new Date().toISOString(),
+          id: new Date().toISOString(), 
           content: input,
           role: "user",
         },

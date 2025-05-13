@@ -1,11 +1,11 @@
 "use client";
-
+import React from "react";
 import { getSession } from "@/lib/session";
 import { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React from "react";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 
 function Navbar() {
   const [isVisible, setIsVisible] = React.useState(false);
@@ -16,13 +16,14 @@ function Navbar() {
   React.useEffect(() => {
     const fetchSession = async () => {
       const session = await getSession();
+      console.log(session);
       setSession(session);
     };
     fetchSession();
   }, [router]);
 
   return (
-    <nav
+    <div
       className="fixed w-full z-50"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}>
@@ -37,9 +38,9 @@ function Navbar() {
             <div className="flex justify-between h-16">
               {/* Logo and brand */}
               <div className="flex items-center">
-                <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   AiWord
-                </div>
+                </p>
               </div>
 
               {/* Desktop menu */}
@@ -47,9 +48,11 @@ function Navbar() {
                 {session ? (
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center">
-                      <img
-                        src={session.user?.image || "/api/placeholder/32/32"}
+                      <Image
+                        src={session.user?.image || "https://github.com/shadcn.png"}
                         alt="Profile"
+                        width={32}
+                        height={32}
                         className="h-8 w-8 rounded-full"
                       />
                       <span className="ml-2 text-gray-700">
@@ -130,7 +133,7 @@ function Navbar() {
           isVisible ? "hidden" : "block"
         }`}
       />
-    </nav>
+    </div>
   );
 }
 

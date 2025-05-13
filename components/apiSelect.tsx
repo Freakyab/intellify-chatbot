@@ -34,19 +34,25 @@ const ApiSelection = ({
 
   React.useEffect(() => {
     const fetchKeys = async () => {
-      const session = await getSession();
-      if (!session) {
-        throw new Error("Session is null");
-      }
-      const tokenResponse = await getTotalToken({ userId: session.user.id });
-      if (tokenResponse.status === "error") {
-        throw new Error(tokenResponse.message);
-      } else {
-        const tokenData = tokenResponse.data.find((res: { apiKey: string }) => {
-          return res.apiKey === formData.apiKey;
-        });
-        setToken(tokenData?.totalToken || 0);
-        setAllKeys(tokenResponse.data);
+      try {
+        const session = await getSession();
+        if (!session) {
+          throw new Error("Session is null");
+        }
+        const tokenResponse = await getTotalToken({ userId: session.user.id });
+        if (tokenResponse.status === "error") {
+          throw new Error(tokenResponse.message);
+        } else {
+          const tokenData = tokenResponse.data.find(
+            (res: { apiKey: string }) => {
+              return res.apiKey === formData.apiKey;
+            }
+          );
+          setToken(tokenData?.totalToken || 0);
+          setAllKeys(tokenResponse.data);
+        }
+      } catch (error) {
+        console.log(error);
       }
     };
     fetchKeys();
@@ -75,9 +81,7 @@ const ApiSelection = ({
               <Button onClick={() => setIsOpen(false)} variant="outline">
                 Close
               </Button>
-              <Button onClick={handleChange} >
-                Select
-              </Button>
+              <Button onClick={handleChange}>Select</Button>
             </div>
           </div>
         </DialogContent>

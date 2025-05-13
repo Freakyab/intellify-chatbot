@@ -38,13 +38,13 @@ export const ScreenWidthProvider = ({ children }: { children: React.ReactNode })
 
     return (
         <ScreenWidthContext.Provider value={screenWidthState}>
-            {/* {screenWidthState.isVisible ? (
-                <React.Fragment>{children}</React.Fragment>
-            ) : ( */}
+            {screenWidthState.isVisible ? (
+                <>{children}</>
+            ) : (
                 <div className="flex h-screen items-center justify-center bg-gray-50">
                     Please use a laptop or desktop to view this page
                 </div>
-            {/* )} */}
+            )}
         </ScreenWidthContext.Provider>
     );
 };

@@ -34,7 +34,7 @@ export async function POST(req: Request) {
             - you provide maximum information to the user
             - you are polite and helpful
             - use minimum tokens to generate a response`,
-        tokenLimit: useUserSettings ? formData.tokenLimit : 500,
+        tokenLimit: useUserSettings ? formData.tokenLimit : 1000,
         apiType: useUserSettings ? formData.apiType : "gemini",
         freeTokenLimit: formData.freeTokenLimit || 0
     }
